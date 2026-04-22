@@ -1,8 +1,13 @@
 import { defaultCompanies, seedDefaultEntries } from '../utils/defaults.js'
+import { getCurrentUser } from './authService.js'
 
 const KEYS = {
   companies: 'bb_companies',
   entries: 'bb_entries',
+}
+
+function getRawEntries() {
+  return JSON.parse(localStorage.getItem(KEYS.entries)) ?? []
 }
 
 function initIfEmpty() {
@@ -26,9 +31,14 @@ export function saveCompanies(companies) {
 }
 
 // TODO: replace with API call (Supabase / REST)
+// Admin receives all entries; regular users only their own.
 export function getEntries() {
   initIfEmpty()
-  return JSON.parse(localStorage.getItem(KEYS.entries)) ?? []
+  const all = getRawEntries()
+  const user = getCurrentUser()
+  if (!user) return []
+  if (user.role === 'admin') return all
+  return all.filter(e => e.userId === user.id)
 }
 
 // TODO: replace with API call (Supabase / REST)
@@ -38,20 +48,20 @@ export function saveEntries(entries) {
 
 // TODO: replace with API call (Supabase / REST)
 export function addEntry(entry) {
-  const entries = getEntries()
-  entries.push(entry)
-  saveEntries(entries)
+  const all = getRawEntries()
+  all.push(entry)
+  localStorage.setItem(KEYS.entries, JSON.stringify(all))
   return entry
 }
 
 // TODO: replace with API call (Supabase / REST)
 export function deleteEntry(id) {
-  const entries = getEntries().filter(e => e.id !== id)
-  saveEntries(entries)
+  localStorage.setItem(KEYS.entries, JSON.stringify(getRawEntries().filter(e => e.id !== id)))
 }
 
 // TODO: replace with API call (Supabase / REST)
 export function updateEntry(id, changes) {
-  const entries = getEntries().map(e => (e.id === id ? { ...e, ...changes } : e))
-  saveEntries(entries)
+  localStorage.setItem(KEYS.entries, JSON.stringify(
+    getRawEntries().map(e => (e.id === id ? { ...e, ...changes } : e))
+  ))
 }

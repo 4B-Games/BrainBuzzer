@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Play, PlusCircle } from 'lucide-react'
 import { useTimer } from '../hooks/useTimer.js'
 import { getCompanies, addEntry } from '../services/dataService.js'
+import { getCurrentUser } from '../services/authService.js'
 import { uid, fmtDuration } from '../utils/format.js'
 import TileGrid from '../components/TileGrid.jsx'
 import TimerBanner from '../components/TimerBanner.jsx'
@@ -48,7 +49,7 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
     })
   }
 
-  // Keep activeEntry elapsed in sync via a small trick: re-broadcast on each render
+  // Keep elapsed in sync with the activeEntry object in App.jsx
   useEffect(() => {
     if (running && activeEntry) {
       onEntryStart({ ...activeEntry, elapsed })
@@ -57,9 +58,10 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
 
   function handleStop() {
     const { end, duration } = stop()
+    const user = getCurrentUser()
     addEntry({
       id: uid(),
-      userId: 'local-user',
+      userId: user?.id ?? 'unknown',
       companyId: selectedCompanyId,
       projectId: selectedProjectId ?? null,
       start: timerStart,
@@ -103,10 +105,7 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
             <section className="section">
               <h2 className="section-title">Projekt wählen</h2>
               <TileGrid
-                items={selectedCompany.projects.map(p => ({
-                  ...p,
-                  color: selectedCompany.color,
-                }))}
+                items={selectedCompany.projects.map(p => ({ ...p, color: selectedCompany.color }))}
                 selected={selectedProjectId}
                 onSelect={handleProjectSelect}
               />

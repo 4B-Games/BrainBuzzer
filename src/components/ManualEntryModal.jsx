@@ -2,16 +2,35 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { uid, fmtDateInput, fmtTimeInput } from '../utils/format.js'
 import { addEntry } from '../services/dataService.js'
+import { getCurrentUser } from '../services/authService.js'
+
+// 15-minute interval time options for the dropdowns
+const TIME_OPTIONS = (() => {
+  const opts = []
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 15) {
+      opts.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+    }
+  }
+  return opts
+})()
+
+function roundToQuarter(date) {
+  const d = new Date(date)
+  d.setMinutes(Math.round(d.getMinutes() / 15) * 15, 0, 0)
+  return d
+}
 
 export default function ManualEntryModal({ companies, onClose, onSaved }) {
   const now = new Date()
-  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+  const oneHourAgo = roundToQuarter(new Date(now.getTime() - 60 * 60 * 1000))
+  const roundedNow = roundToQuarter(now)
 
   const [companyId, setCompanyId] = useState('')
   const [projectId, setProjectId] = useState('')
   const [date, setDate] = useState(fmtDateInput(now))
   const [timeFrom, setTimeFrom] = useState(fmtTimeInput(oneHourAgo))
-  const [timeTo, setTimeTo] = useState(fmtTimeInput(now))
+  const [timeTo, setTimeTo] = useState(fmtTimeInput(roundedNow))
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
 
@@ -31,9 +50,10 @@ export default function ManualEntryModal({ companies, onClose, onSaved }) {
     if (end <= start) { setError('"Bis" muss nach "Von" liegen.'); return }
 
     const duration = Math.floor((end - start) / 1000)
+    const user = getCurrentUser()
     addEntry({
       id: uid(),
-      userId: 'local-user',
+      userId: user?.id ?? 'unknown',
       companyId,
       projectId: projectId || null,
       start: start.toISOString(),
@@ -85,11 +105,19 @@ export default function ManualEntryModal({ companies, onClose, onSaved }) {
         <div className="form-row">
           <div className="form-group">
             <label>Von</label>
-            <input type="time" value={timeFrom} onChange={e => setTimeFrom(e.target.value)} />
+            <select value={timeFrom} onChange={e => setTimeFrom(e.target.value)}>
+              {TIME_OPTIONS.map(t => (
+                <option key={t} value={t}>{t} Uhr</option>
+              ))}
+            </select>
           </div>
           <div className="form-group">
             <label>Bis</label>
-            <input type="time" value={timeTo} onChange={e => setTimeTo(e.target.value)} />
+            <select value={timeTo} onChange={e => setTimeTo(e.target.value)}>
+              {TIME_OPTIONS.map(t => (
+                <option key={t} value={t}>{t} Uhr</option>
+              ))}
+            </select>
           </div>
         </div>
 

@@ -1,14 +1,14 @@
-import { Timer, Calendar, BarChart2, Settings, Clock } from 'lucide-react'
+import { Timer, Calendar, BarChart2, Settings, Clock, LogOut, Sun, Moon } from 'lucide-react'
 import { fmtDuration } from '../utils/format.js'
 
 const NAV = [
-  { id: 'timer', label: 'Timer', Icon: Timer },
-  { id: 'today', label: 'Heute', Icon: Calendar },
-  { id: 'reports', label: 'Berichte', Icon: BarChart2 },
-  { id: 'settings', label: 'Einstellungen', Icon: Settings },
+  { id: 'timer',    label: 'Timer',          Icon: Timer },
+  { id: 'today',    label: 'Heute',          Icon: Calendar },
+  { id: 'reports',  label: 'Berichte',       Icon: BarChart2 },
+  { id: 'settings', label: 'Einstellungen',  Icon: Settings },
 ]
 
-export default function Sidebar({ page, onNavigate, activeEntry }) {
+export default function Sidebar({ page, onNavigate, activeEntry, currentUser, onLogout, theme, onThemeToggle }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
@@ -36,6 +36,27 @@ export default function Sidebar({ page, onNavigate, activeEntry }) {
           </button>
         ))}
       </nav>
+
+      <div className="sidebar-bottom">
+        <button className="sidebar-theme-btn" onClick={onThemeToggle} title="Design wechseln">
+          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+          <span>{theme === 'dark' ? 'Helles Design' : 'Dunkles Design'}</span>
+        </button>
+
+        {currentUser && (
+          <div className="sidebar-user">
+            <div className="sidebar-user-info">
+              <span className="sidebar-user-name">{currentUser.name}</span>
+              <span className="sidebar-user-role">
+                {currentUser.role === 'admin' ? 'Administrator' : 'Mitarbeiter'}
+              </span>
+            </div>
+            <button className="sidebar-logout-btn" onClick={onLogout} title="Abmelden">
+              <LogOut size={15} />
+            </button>
+          </div>
+        )}
+      </div>
     </aside>
   )
 }
