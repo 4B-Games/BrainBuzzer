@@ -2,18 +2,19 @@ import { useState, useEffect, useMemo } from 'react'
 import { Download } from 'lucide-react'
 import { getEntries, getCompanies } from '../services/dataService.js'
 import { getUsers } from '../services/authService.js'
-import { fmtDate, fmtTime, fmtDurationShort } from '../utils/format.js'
+import { fmtDate, fmtTime, fmtDurationShort, fmtDateInput } from '../utils/format.js'
 import BarChart from '../components/BarChart.jsx'
 import EntryList from '../components/EntryList.jsx'
 
 const FILTERS = [
-  { id: 'today', label: 'Heute' },
-  { id: 'week',  label: 'Diese Woche' },
-  { id: 'month', label: 'Dieser Monat' },
-  { id: 'all',   label: 'Gesamt' },
+  { id: 'today',  label: 'Heute' },
+  { id: 'week',   label: 'Diese Woche' },
+  { id: 'month',  label: 'Dieser Monat' },
+  { id: 'all',    label: 'Gesamt' },
+  { id: 'custom', label: 'Zeitraum …' },
 ]
 
-function getFilterRange(filterId) {
+function getFilterRange(filterId, customFrom, customTo) {
   const now = new Date()
   if (filterId === 'today') {
     const s = new Date(now); s.setHours(0, 0, 0, 0)
@@ -31,14 +32,22 @@ function getFilterRange(filterId) {
     const e = new Date(now); e.setHours(23, 59, 59, 999)
     return { start: s, end: e }
   }
+  if (filterId === 'custom') {
+    const s = customFrom ? new Date(`${customFrom}T00:00:00`) : new Date(0)
+    const e = customTo   ? new Date(`${customTo}T23:59:59`)   : new Date(9999, 11, 31)
+    return { start: s, end: e }
+  }
   return { start: new Date(0), end: new Date(9999, 11, 31) }
 }
 
 export default function ReportsView({ dataVersion, currentUser }) {
+  const now = new Date()
   const [entries, setEntries] = useState([])
   const [companies, setCompanies] = useState([])
   const [filter, setFilter] = useState('week')
   const [selectedUserId, setSelectedUserId] = useState('all')
+  const [customFrom, setCustomFrom] = useState(fmtDateInput(new Date(now.getFullYear(), now.getMonth(), 1)))
+  const [customTo, setCustomTo] = useState(fmtDateInput(now))
 
   const isAdmin = currentUser?.role === 'admin'
   const employees = useMemo(
@@ -52,7 +61,7 @@ export default function ReportsView({ dataVersion, currentUser }) {
   }, [dataVersion])
 
   const filtered = useMemo(() => {
-    const range = getFilterRange(filter)
+    const range = getFilterRange(filter, customFrom, customTo)
     let result = entries.filter(e => {
       const d = new Date(e.start)
       return d >= range.start && d <= range.end
@@ -61,7 +70,7 @@ export default function ReportsView({ dataVersion, currentUser }) {
       result = result.filter(e => e.userId === selectedUserId)
     }
     return result.sort((a, b) => new Date(a.start) - new Date(b.start))
-  }, [entries, filter, isAdmin, selectedUserId])
+  }, [entries, filter, customFrom, customTo, isAdmin, selectedUserId])
 
   const chartData = useMemo(() => {
     const map = {}
@@ -133,6 +142,27 @@ export default function ReportsView({ dataVersion, currentUser }) {
           Gesamt: <strong>{fmtDurationShort(totalSeconds)}</strong>
         </span>
       </div>
+
+      {filter === 'custom' && (
+        <div className="custom-range-bar">
+          <label className="custom-range-label">Von</label>
+          <input
+            type="date"
+            className="custom-range-input"
+            value={customFrom}
+            max={customTo}
+            onChange={e => setCustomFrom(e.target.value)}
+          />
+          <label className="custom-range-label">Bis</label>
+          <input
+            type="date"
+            className="custom-range-input"
+            value={customTo}
+            min={customFrom}
+            onChange={e => setCustomTo(e.target.value)}
+          />
+        </div>
+      )}
 
       {isAdmin && (
         <div className="user-filter-bar">

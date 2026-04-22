@@ -795,6 +795,47 @@ html, body {
 .today-total { font-size: 13px; color: var(--text-dim); }
 .today-total strong { color: var(--text); }
 
+/* ── Custom Date Range ────────────────────────────────────────── */
+.custom-range-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.custom-range-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.custom-range-input {
+  padding: 6px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+  cursor: pointer;
+}
+
+.custom-range-input:focus { border-color: var(--accent); }
+
+/* date picker icon color in light mode */
+[data-theme="light"] .custom-range-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.4);
+}
+
 /* ── Modal ────────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
