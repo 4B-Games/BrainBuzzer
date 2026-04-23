@@ -608,23 +608,50 @@ html, body {
 /* ── Timeline ─────────────────────────────────────────────────── */
 .timeline {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 20px 20px;
-  overflow-x: auto;
+  padding: 14px 16px 16px;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.12);
+}
+
+[data-theme="light"] .timeline {
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.06);
 }
 
 .timeline-hint {
   font-size: 11px;
   color: var(--text-dim);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   letter-spacing: 0.3px;
+}
+
+/* Wrapper clips blocks that go outside viewport */
+.timeline-track-wrap {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg) 70%, var(--surface));
+}
+
+/* The block-area background stripe */
+.timeline-blocks-bg {
+  position: absolute;
+  top: 34px;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: color-mix(in srgb, var(--surface2) 60%, transparent);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  pointer-events: none;
 }
 
 .timeline-track {
   position: relative;
-  height: 110px;        /* tall enough for labels + blocks */
-  min-width: 960px;     /* comfortable minimum for desktop */
+  height: 108px;
+  min-width: 900px;
+  padding: 0 2px;
 }
 
 .timeline-track--interactive {
@@ -640,61 +667,70 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
 }
 
 .tl-tick-label {
   font-size: 11px;
   color: var(--text-dim);
   white-space: nowrap;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   line-height: 1.2;
+  font-weight: 500;
 }
 
-.tl-tick-line {
-  width: 1px;
-  height: 18px;
+/* hour: tall line */
+.tl-tick--hour .tl-tick-line {
+  width: 1px; height: 22px;
+  background: color-mix(in srgb, var(--text-dim) 60%, transparent);
+}
+
+/* medium (30 min): medium line, no label */
+.tl-tick--medium .tl-tick-line {
+  width: 1px; height: 12px; margin-top: 14px;
   background: var(--border);
 }
 
-.tl-tick--half .tl-tick-label { display: none; }  /* half-hours: tick only */
-.tl-tick--half .tl-tick-line  { height: 8px; opacity: 0.5; }
+/* small (10/20/40/50 min): short line, no label */
+.tl-tick--small .tl-tick-line {
+  width: 1px; height: 7px; margin-top: 19px;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+}
 
 /* ── Blocks ── */
 .tl-block {
   position: absolute;
-  top: 34px;              /* below the tick/label area */
+  top: 36px;
   height: 60px;
-  border-radius: 6px;
+  border-radius: 7px;
   min-width: 3px;
-  opacity: 0.9;
+  opacity: 0.92;
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 0 8px;
+  padding: 0 9px;
   overflow: hidden;
-  transition: opacity 0.12s, box-shadow 0.12s;
+  transition: opacity 0.12s, box-shadow 0.12s, filter 0.12s;
 }
 
-.tl-block--draggable {
-  cursor: grab;
-}
+.tl-block--draggable { cursor: grab; }
 
 .tl-block--draggable:hover {
   opacity: 1;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.3);
+  filter: brightness(1.1);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
 }
 
 .tl-block--moving {
   cursor: grabbing !important;
   opacity: 1;
   z-index: 20;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.4);
-  transition: none;   /* no lag while dragging */
+  filter: brightness(1.12);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+  transition: none;
 }
 
 .tl-block-emoji {
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1;
   flex-shrink: 0;
   pointer-events: none;
@@ -702,42 +738,120 @@ html, body {
 
 .tl-block-label {
   font-size: 11px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.92);
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
 /* ── Create-by-drag preview ── */
 .tl-drag-preview {
   position: absolute;
-  top: 34px;
+  top: 36px;
   height: 60px;
-  border-radius: 6px;
+  border-radius: 7px;
   background: var(--accent);
-  opacity: 0.3;
+  opacity: 0.28;
   pointer-events: none;
   border: 2px dashed var(--accent);
 }
 
 .tl-drag-label {
   position: absolute;
-  top: 4px;
+  top: 6px;
   transform: translateX(-50%);
   background: var(--accent);
   color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 7px;
   white-space: nowrap;
   pointer-events: none;
   z-index: 10;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  letter-spacing: 0.3px;
 }
+
+/* ── Viewport slider ── */
+.tl-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.tl-slider-bound {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.tl-slider-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tl-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+
+.tl-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+}
+
+.tl-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.tl-slider::-moz-range-thumb {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+}
+
+.tl-slider-range-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.tl-now-btn {
+  padding: 5px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.tl-now-btn:hover { color: var(--accent); border-color: var(--accent); }
 
 /* ── Entry List ───────────────────────────────────────────────── */
 .entry-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
@@ -945,15 +1059,18 @@ html, body {
 .modal {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 14px;
+  padding: 28px 30px;
   width: 100%;
-  max-width: 440px;
+  max-width: 560px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   box-shadow: var(--shadow);
 }
+
+/* Wider variant for time entry modals */
+.modal--xl { max-width: 680px; }
 
 .modal-header {
   display: flex;
@@ -1757,7 +1874,7 @@ html, body {
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* ── Wide modal ───────────────────────────────────────────────── */
-.modal--wide { max-width: 600px; }
+.modal--wide { max-width: 680px; }
 
 /* ── User modal avatar ────────────────────────────────────────── */
 .user-modal-avatar-row {
@@ -1985,3 +2102,132 @@ html, body {
 .mgmt-btn--deactivate:hover  { color: var(--danger);  border-color: var(--danger);  }
 .mgmt-btn--danger            { color: var(--danger); border-color: var(--danger); font-weight: 600; }
 .mgmt-btn--danger-soft:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ── TimeInput (Spinner + Text) ──────────────────────────────── */
+.form-row--time {
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.ti-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ti-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+}
+
+/* Spinner row: [col] : [col] */
+.ti-spinner-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  justify-content: center;
+}
+
+.ti-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ti-btn {
+  width: 32px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
+}
+
+.ti-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.ti-btn:active {
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface));
+}
+
+.ti-value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text);
+  min-width: 50px;
+  text-align: center;
+  cursor: ns-resize;
+  line-height: 1.1;
+  padding: 2px 0;
+  user-select: none;
+  border-radius: 4px;
+  transition: color 0.1s;
+}
+
+.ti-value:hover { color: var(--accent); }
+
+.ti-colon {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-dim);
+  padding: 0 2px;
+  line-height: 1;
+  margin-top: 30px;   /* align with value, not buttons */
+}
+
+/* "oder" divider + text input */
+.ti-text-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ti-text-or {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ti-text-input {
+  flex: 1;
+  padding: 7px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.15s;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.ti-text-input:focus { border-color: var(--accent); }
+
+/* calendar/clock icon color in light mode */
+[data-theme="light"] .ti-text-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.4);
+}
