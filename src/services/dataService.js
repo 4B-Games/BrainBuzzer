@@ -3,7 +3,7 @@ import { getCurrentUser } from './authService.js'
 
 const KEYS = {
   companies: 'bb_companies',
-  entries: 'bb_entries',
+  entries:   'bb_entries',
 }
 
 function getRawEntries() {
@@ -31,14 +31,19 @@ export function saveCompanies(companies) {
 }
 
 // TODO: replace with API call (Supabase / REST)
-// Admin receives all entries; regular users only their own.
+// Always returns only the current user's entries (even for admins).
 export function getEntries() {
   initIfEmpty()
-  const all = getRawEntries()
   const user = getCurrentUser()
   if (!user) return []
-  if (user.role === 'admin') return all
-  return all.filter(e => e.userId === user.id)
+  return getRawEntries().filter(e => e.userId === user.id)
+}
+
+// TODO: replace with API call (Supabase / REST)
+// Admin-only: returns all entries across all users.
+export function getAllEntries() {
+  initIfEmpty()
+  return getRawEntries()
 }
 
 // TODO: replace with API call (Supabase / REST)

@@ -4,7 +4,6 @@ import { uid, fmtDateInput, fmtTimeInput } from '../utils/format.js'
 import { addEntry } from '../services/dataService.js'
 import { getCurrentUser } from '../services/authService.js'
 
-// 15-minute interval time options for the dropdowns
 const TIME_OPTIONS = (() => {
   const opts = []
   for (let h = 0; h < 24; h++) {
@@ -21,18 +20,20 @@ function roundToQuarter(date) {
   return d
 }
 
-export default function ManualEntryModal({ companies, onClose, onSaved }) {
+export default function ManualEntryModal({ companies, onClose, onSaved, prefilledTimes }) {
   const now = new Date()
-  const oneHourAgo = roundToQuarter(new Date(now.getTime() - 60 * 60 * 1000))
-  const roundedNow = roundToQuarter(now)
+
+  const initDate  = prefilledTimes?.start ? fmtDateInput(new Date(prefilledTimes.start)) : fmtDateInput(now)
+  const initFrom  = prefilledTimes?.start ? fmtTimeInput(new Date(prefilledTimes.start)) : fmtTimeInput(roundToQuarter(new Date(now.getTime() - 3600_000)))
+  const initTo    = prefilledTimes?.end   ? fmtTimeInput(new Date(prefilledTimes.end))   : fmtTimeInput(roundToQuarter(now))
 
   const [companyId, setCompanyId] = useState('')
   const [projectId, setProjectId] = useState('')
-  const [date, setDate] = useState(fmtDateInput(now))
-  const [timeFrom, setTimeFrom] = useState(fmtTimeInput(oneHourAgo))
-  const [timeTo, setTimeTo] = useState(fmtTimeInput(roundedNow))
-  const [note, setNote] = useState('')
-  const [error, setError] = useState('')
+  const [date,     setDate]     = useState(initDate)
+  const [timeFrom, setTimeFrom] = useState(initFrom)
+  const [timeTo,   setTimeTo]   = useState(initTo)
+  const [note,     setNote]     = useState('')
+  const [error,    setError]    = useState('')
 
   const selectedCompany = companies.find(c => c.id === companyId)
 
@@ -45,11 +46,10 @@ export default function ManualEntryModal({ companies, onClose, onSaved }) {
     if (!companyId) { setError('Bitte ein Unternehmen wählen.'); return }
 
     const start = new Date(`${date}T${timeFrom}`)
-    const end = new Date(`${date}T${timeTo}`)
+    const end   = new Date(`${date}T${timeTo}`)
     if (isNaN(start) || isNaN(end)) { setError('Ungültige Zeitangaben.'); return }
     if (end <= start) { setError('"Bis" muss nach "Von" liegen.'); return }
 
-    const duration = Math.floor((end - start) / 1000)
     const user = getCurrentUser()
     addEntry({
       id: uid(),
@@ -57,8 +57,8 @@ export default function ManualEntryModal({ companies, onClose, onSaved }) {
       companyId,
       projectId: projectId || null,
       start: start.toISOString(),
-      end: end.toISOString(),
-      duration,
+      end:   end.toISOString(),
+      duration: Math.floor((end - start) / 1000),
       note,
     })
     onSaved()
@@ -79,19 +79,17 @@ export default function ManualEntryModal({ companies, onClose, onSaved }) {
           <label>Unternehmen</label>
           <select value={companyId} onChange={e => handleCompanyChange(e.target.value)}>
             <option value="">— bitte wählen —</option>
-            {companies.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
+            {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
 
-        {selectedCompany && selectedCompany.projects.length > 0 && (
+        {selectedCompany?.projects.length > 0 && (
           <div className="form-group">
             <label>Projekt</label>
             <select value={projectId} onChange={e => setProjectId(e.target.value)}>
               <option value="">— kein Projekt —</option>
               {selectedCompany.projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>{p.emoji ? p.emoji + ' ' : ''}{p.name}</option>
               ))}
             </select>
           </div>
@@ -106,17 +104,13 @@ export default function ManualEntryModal({ companies, onClose, onSaved }) {
           <div className="form-group">
             <label>Von</label>
             <select value={timeFrom} onChange={e => setTimeFrom(e.target.value)}>
-              {TIME_OPTIONS.map(t => (
-                <option key={t} value={t}>{t} Uhr</option>
-              ))}
+              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t} Uhr</option>)}
             </select>
           </div>
           <div className="form-group">
             <label>Bis</label>
             <select value={timeTo} onChange={e => setTimeTo(e.target.value)}>
-              {TIME_OPTIONS.map(t => (
-                <option key={t} value={t}>{t} Uhr</option>
-              ))}
+              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t} Uhr</option>)}
             </select>
           </div>
         </div>

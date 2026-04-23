@@ -12,7 +12,10 @@ export default function TileGrid({ items, selected, onSelect, emptyText = 'Keine
           style={{ '--tile-color': item.color }}
           onClick={() => onSelect(item.id === selected ? null : item.id)}
         >
-          <span className="tile-color-dot" style={{ background: item.color }} />
+          {item.emoji
+            ? <span className="tile-emoji">{item.emoji}</span>
+            : <span className="tile-color-dot" style={{ background: item.color }} />
+          }
           <span className="tile-name">{item.name}</span>
         </button>
       ))}

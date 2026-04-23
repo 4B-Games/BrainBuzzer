@@ -23,7 +23,7 @@
   --danger:       #ef4444;
   --success:      #10b981;
   --radius:       8px;
-  --sidebar-w:    220px;
+  --sidebar-w:    250px;
   --shadow:       0 4px 24px rgba(0,0,0,0.4);
 }
 
@@ -228,9 +228,9 @@ html, body {
 
 /* ── Views ───────────────────────────────────────────────────── */
 .view {
-  max-width: 860px;
+  max-width: 1300px;
   margin: 0 auto;
-  padding: 32px 28px;
+  padding: 36px 40px;
 }
 
 .view-header {
@@ -516,16 +516,16 @@ html, body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 18px;
+  padding: 14px 22px;
   background: var(--surface);
   border: 2px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text);
   transition: border-color 0.15s, background 0.15s;
-  min-width: 160px;
+  min-width: 180px;
 }
 
 .tile:hover {
@@ -616,8 +616,13 @@ html, body {
 
 .timeline-track {
   position: relative;
-  height: 48px;
-  min-width: 600px;
+  height: 56px;
+  min-width: 700px;
+}
+
+.timeline-track--interactive {
+  cursor: crosshair;
+  user-select: none;
 }
 
 .timeline-hour {
@@ -632,18 +637,60 @@ html, body {
 .timeline-hour-label { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
 .timeline-hour-tick { width: 1px; height: 12px; background: var(--border); }
 
+.timeline-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  letter-spacing: 0.4px;
+}
+
 .timeline-block {
   position: absolute;
-  top: 20px;
-  height: 24px;
+  top: 22px;
+  height: 28px;
   border-radius: 4px;
   min-width: 4px;
-  opacity: 0.85;
+  opacity: 0.88;
   transition: opacity 0.15s;
   cursor: default;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  overflow: hidden;
 }
 
 .timeline-block:hover { opacity: 1; }
+
+.timeline-block-emoji {
+  font-size: 14px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.timeline-drag-preview {
+  position: absolute;
+  top: 22px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--accent);
+  opacity: 0.35;
+  pointer-events: none;
+  border: 2px dashed var(--accent);
+}
+
+.timeline-drag-label {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+}
 
 /* ── Entry List ───────────────────────────────────────────────── */
 .entry-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
@@ -1070,38 +1117,105 @@ html, body {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
-/* ── Responsive ────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .app-shell { flex-direction: column; }
+/* ── Emoji Picker ─────────────────────────────────────────────── */
+.emoji-picker-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
 
-  .sidebar {
-    width: 100%;
-    min-width: unset;
-    flex-direction: row;
-    align-items: center;
-    padding: 10px 16px;
-    gap: 8px;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    flex-wrap: nowrap;
-  }
+.emoji-trigger {
+  width: 40px;
+  height: 38px;
+  font-size: 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
 
-  .sidebar-logo { border-bottom: none; padding-bottom: 0; flex-shrink: 0; }
-  .sidebar-timer-badge { display: none; }
-  .sidebar-nav { flex-direction: row; gap: 4px; flex: 1; }
-  .sidebar-nav-item span { display: none; }
-  .sidebar-nav-item { padding: 8px 10px; }
-  .sidebar-bottom { flex-direction: row; border-top: none; padding-top: 0; border-left: 1px solid var(--border); padding-left: 8px; gap: 4px; }
-  .sidebar-theme-btn span { display: none; }
-  .sidebar-user-role { display: none; }
-  .sidebar-user-name { font-size: 11px; }
+.emoji-trigger:hover { border-color: var(--accent); }
 
-  .main-content { overflow-y: auto; }
-  .view { padding: 20px 16px; }
-  .tile { min-width: 120px; }
-  .timer-clock { font-size: 44px; }
+.emoji-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  box-shadow: var(--shadow);
+  width: 280px;
+}
 
-  .login-card { padding: 28px 20px; }
-  .login-demo-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+.emoji-clear {
+  display: block;
+  width: 100%;
+  padding: 5px 8px;
+  margin-bottom: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  text-align: left;
+  transition: color 0.15s;
+}
+
+.emoji-clear:hover { color: var(--danger); }
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+}
+
+.emoji-option {
+  width: 24px;
+  height: 24px;
+  font-size: 15px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s;
+}
+
+.emoji-option:hover { background: var(--surface2); }
+.emoji-option.selected { background: color-mix(in srgb, var(--accent) 25%, transparent); border-color: var(--accent); }
+
+/* ── Settings extras ──────────────────────────────────────────── */
+.settings-readonly-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+}
+
+.settings-project-emoji {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.settings-project-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tile-emoji {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
 }

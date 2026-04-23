@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Download } from 'lucide-react'
-import { getEntries, getCompanies } from '../services/dataService.js'
+import { getEntries, getAllEntries, getCompanies } from '../services/dataService.js'
 import { getUsers } from '../services/authService.js'
 import { fmtDate, fmtTime, fmtDurationShort, fmtDateInput } from '../utils/format.js'
 import BarChart from '../components/BarChart.jsx'
@@ -50,15 +50,17 @@ export default function ReportsView({ dataVersion, currentUser }) {
   const [customTo, setCustomTo] = useState(fmtDateInput(now))
 
   const isAdmin = currentUser?.role === 'admin'
+  // Admin can filter by any user (including themselves)
   const employees = useMemo(
-    () => isAdmin ? getUsers().filter(u => u.role !== 'admin') : [],
+    () => isAdmin ? getUsers() : [],
     [isAdmin]
   )
 
   useEffect(() => {
-    setEntries(getEntries())
+    // Admin sees all users' entries in reports; own entries only for regular users.
+    setEntries(isAdmin ? getAllEntries() : getEntries())
     setCompanies(getCompanies())
-  }, [dataVersion])
+  }, [dataVersion, isAdmin])
 
   const filtered = useMemo(() => {
     const range = getFilterRange(filter, customFrom, customTo)

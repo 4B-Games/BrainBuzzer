@@ -3,20 +3,20 @@ import { getEntries, getCompanies, deleteEntry } from '../services/dataService.j
 import { fmtDurationShort } from '../utils/format.js'
 import Timeline from '../components/Timeline.jsx'
 import EntryList from '../components/EntryList.jsx'
+import ManualEntryModal from '../components/ManualEntryModal.jsx'
 
 function isToday(isoString) {
   const d = new Date(isoString)
   const now = new Date()
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  )
+  return d.getFullYear() === now.getFullYear()
+    && d.getMonth() === now.getMonth()
+    && d.getDate() === now.getDate()
 }
 
 export default function TodayView({ dataVersion, onDataChange }) {
   const [entries, setEntries] = useState([])
   const [companies, setCompanies] = useState([])
+  const [prefilledTimes, setPrefilledTimes] = useState(null)
 
   useEffect(() => {
     setEntries(getEntries())
@@ -38,6 +38,10 @@ export default function TodayView({ dataVersion, onDataChange }) {
     onDataChange()
   }
 
+  function handleRangeSelect(startISO, endISO) {
+    setPrefilledTimes({ start: startISO, end: endISO })
+  }
+
   return (
     <div className="view">
       <div className="view-header">
@@ -49,7 +53,12 @@ export default function TodayView({ dataVersion, onDataChange }) {
 
       <section className="section">
         <h2 className="section-title">Zeitstrahl (07:00 – 22:00)</h2>
-        <Timeline entries={todayEntries} companies={companies} />
+        <Timeline
+          entries={todayEntries}
+          companies={companies}
+          onRangeSelect={handleRangeSelect}
+          date={new Date()}
+        />
       </section>
 
       <section className="section">
@@ -60,6 +69,15 @@ export default function TodayView({ dataVersion, onDataChange }) {
           onDelete={handleDelete}
         />
       </section>
+
+      {prefilledTimes && (
+        <ManualEntryModal
+          companies={companies}
+          prefilledTimes={prefilledTimes}
+          onClose={() => setPrefilledTimes(null)}
+          onSaved={() => { onDataChange(); setPrefilledTimes(null) }}
+        />
+      )}
     </div>
   )
 }

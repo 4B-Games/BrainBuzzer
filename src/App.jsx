@@ -61,7 +61,7 @@ export default function App() {
         {page === 'reports' && (
           <ReportsView dataVersion={dataVersion} currentUser={currentUser} />
         )}
-        {page === 'settings' && <SettingsView onDataChange={refresh} />}
+        {page === 'settings' && <SettingsView onDataChange={refresh} currentUser={currentUser} />}
       </main>
     </div>
   )

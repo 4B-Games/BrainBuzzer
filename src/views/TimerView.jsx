@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Play, PlusCircle } from 'lucide-react'
 import { useTimer } from '../hooks/useTimer.js'
 import { getCompanies, addEntry } from '../services/dataService.js'
@@ -8,6 +8,23 @@ import TileGrid from '../components/TileGrid.jsx'
 import TimerBanner from '../components/TimerBanner.jsx'
 import ManualEntryModal from '../components/ManualEntryModal.jsx'
 
+const TWO_HOURS_MS = 2 * 60 * 60 * 1000
+
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
+}
+
+function sendReminder(companyName, projectName) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return
+  new Notification('BrainBuzzer – Noch aktiv?', {
+    body: `Du arbeitest seit über 2 Stunden an: ${companyName}${projectName ? ' · ' + projectName : ''}`,
+    icon: '/favicon.svg',
+    tag: 'bb-reminder',
+  })
+}
+
 export default function TimerView({ onEntryStart, onEntryStop, onDataChange, activeEntry }) {
   const [companies, setCompanies] = useState([])
   const [selectedCompanyId, setSelectedCompanyId] = useState(null)
@@ -15,12 +32,17 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
   const [note, setNote] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [timerStart, setTimerStart] = useState(null)
+  const notifTimeout = useRef(null)
 
   const { running, elapsed, start, stop, reset } = useTimer()
 
   useEffect(() => {
     setCompanies(getCompanies())
+    requestNotificationPermission()
   }, [])
+
+  // Cleanup notification timeout on unmount
+  useEffect(() => () => clearTimeout(notifTimeout.current), [])
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId)
   const selectedProject = selectedCompany?.projects.find(p => p.id === selectedProjectId)
@@ -41,15 +63,22 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
     const startIso = start()
     setTimerStart(startIso)
     onEntryStart({
-      companyId: selectedCompanyId,
+      companyId:   selectedCompanyId,
       companyName: selectedCompany?.name ?? '',
       companyColor: selectedCompany?.color ?? '#6366f1',
       projectName: selectedProject?.name ?? '',
       elapsed: 0,
     })
+
+    // Schedule 2-hour inactivity reminder
+    clearTimeout(notifTimeout.current)
+    notifTimeout.current = setTimeout(
+      () => sendReminder(selectedCompany?.name ?? '', selectedProject?.name ?? ''),
+      TWO_HOURS_MS
+    )
   }
 
-  // Keep elapsed in sync with the activeEntry object in App.jsx
+  // Keep elapsed in sync with the banner in App.jsx
   useEffect(() => {
     if (running && activeEntry) {
       onEntryStart({ ...activeEntry, elapsed })
@@ -57,6 +86,7 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
   }, [elapsed]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleStop() {
+    clearTimeout(notifTimeout.current)
     const { end, duration } = stop()
     const user = getCurrentUser()
     addEntry({
@@ -101,7 +131,7 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
             />
           </section>
 
-          {selectedCompany && selectedCompany.projects.length > 0 && (
+          {selectedCompany?.projects.length > 0 && (
             <section className="section">
               <h2 className="section-title">Projekt wählen</h2>
               <TileGrid
@@ -143,7 +173,7 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
           </div>
           <p className="timer-running-label">
             {selectedCompany?.name}
-            {selectedProject ? ` · ${selectedProject.name}` : ''}
+            {selectedProject ? ` · ${selectedProject.emoji ? selectedProject.emoji + ' ' : ''}${selectedProject.name}` : ''}
           </p>
         </div>
       )}
