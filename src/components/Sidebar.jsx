@@ -1,14 +1,17 @@
-import { Timer, Calendar, BarChart2, Settings, Clock, LogOut, Sun, Moon } from 'lucide-react'
+import { Timer, Calendar, BarChart2, Settings, Clock, LogOut, Sun, Moon, Users } from 'lucide-react'
 import { fmtDuration } from '../utils/format.js'
 
-const NAV = [
-  { id: 'timer',    label: 'Timer',          Icon: Timer },
-  { id: 'today',    label: 'Heute',          Icon: Calendar },
-  { id: 'reports',  label: 'Berichte',       Icon: BarChart2 },
-  { id: 'settings', label: 'Einstellungen',  Icon: Settings },
-]
-
 export default function Sidebar({ page, onNavigate, activeEntry, currentUser, onLogout, theme, onThemeToggle }) {
+  const isAdmin = currentUser?.role === 'admin'
+
+  const NAV = [
+    { id: 'timer',    label: 'Timer',          Icon: Timer },
+    { id: 'today',    label: 'Heute',          Icon: Calendar },
+    { id: 'reports',  label: 'Berichte',       Icon: BarChart2 },
+    ...(isAdmin ? [{ id: 'team', label: 'Team', Icon: Users }] : []),
+    { id: 'settings', label: 'Einstellungen',  Icon: Settings },
+  ]
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">

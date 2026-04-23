@@ -6,6 +6,7 @@ import TimerView from './views/TimerView.jsx'
 import TodayView from './views/TodayView.jsx'
 import ReportsView from './views/ReportsView.jsx'
 import SettingsView from './views/SettingsView.jsx'
+import TeamView from './views/TeamView.jsx'
 
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('bb_theme') || 'dark')
@@ -61,6 +62,7 @@ export default function App() {
         {page === 'reports' && (
           <ReportsView dataVersion={dataVersion} currentUser={currentUser} />
         )}
+        {page === 'team' && currentUser?.role === 'admin' && <TeamView dataVersion={dataVersion} />}
         {page === 'settings' && <SettingsView onDataChange={refresh} currentUser={currentUser} />}
       </main>
     </div>
