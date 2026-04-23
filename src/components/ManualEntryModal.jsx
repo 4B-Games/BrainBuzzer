@@ -4,19 +4,9 @@ import { uid, fmtDateInput, fmtTimeInput } from '../utils/format.js'
 import { addEntry } from '../services/dataService.js'
 import { getCurrentUser } from '../services/authService.js'
 
-const TIME_OPTIONS = (() => {
-  const opts = []
-  for (let h = 0; h < 24; h++) {
-    for (let m = 0; m < 60; m += 15) {
-      opts.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
-    }
-  }
-  return opts
-})()
-
-function roundToQuarter(date) {
+function roundTo5Min(date) {
   const d = new Date(date)
-  d.setMinutes(Math.round(d.getMinutes() / 15) * 15, 0, 0)
+  d.setMinutes(Math.round(d.getMinutes() / 5) * 5, 0, 0)
   return d
 }
 
@@ -24,8 +14,8 @@ export default function ManualEntryModal({ companies, onClose, onSaved, prefille
   const now = new Date()
 
   const initDate  = prefilledTimes?.start ? fmtDateInput(new Date(prefilledTimes.start)) : fmtDateInput(now)
-  const initFrom  = prefilledTimes?.start ? fmtTimeInput(new Date(prefilledTimes.start)) : fmtTimeInput(roundToQuarter(new Date(now.getTime() - 3600_000)))
-  const initTo    = prefilledTimes?.end   ? fmtTimeInput(new Date(prefilledTimes.end))   : fmtTimeInput(roundToQuarter(now))
+  const initFrom  = prefilledTimes?.start ? fmtTimeInput(new Date(prefilledTimes.start)) : fmtTimeInput(roundTo5Min(new Date(now.getTime() - 3600_000)))
+  const initTo    = prefilledTimes?.end   ? fmtTimeInput(new Date(prefilledTimes.end))   : fmtTimeInput(roundTo5Min(now))
 
   const [companyId, setCompanyId] = useState('')
   const [projectId, setProjectId] = useState('')
@@ -44,7 +34,6 @@ export default function ManualEntryModal({ companies, onClose, onSaved, prefille
 
   function handleSave() {
     if (!companyId) { setError('Bitte ein Unternehmen wählen.'); return }
-
     const start = new Date(`${date}T${timeFrom}`)
     const end   = new Date(`${date}T${timeTo}`)
     if (isNaN(start) || isNaN(end)) { setError('Ungültige Zeitangaben.'); return }
@@ -103,15 +92,11 @@ export default function ManualEntryModal({ companies, onClose, onSaved, prefille
         <div className="form-row">
           <div className="form-group">
             <label>Von</label>
-            <select value={timeFrom} onChange={e => setTimeFrom(e.target.value)}>
-              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t} Uhr</option>)}
-            </select>
+            <input type="time" value={timeFrom} onChange={e => setTimeFrom(e.target.value)} step="60" />
           </div>
           <div className="form-group">
             <label>Bis</label>
-            <select value={timeTo} onChange={e => setTimeTo(e.target.value)}>
-              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t} Uhr</option>)}
-            </select>
+            <input type="time" value={timeTo} onChange={e => setTimeTo(e.target.value)} step="60" />
           </div>
         </div>
 

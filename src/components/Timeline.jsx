@@ -17,7 +17,7 @@ function durationToPercent(seconds) {
 
 function snapMins(pct) {
   const raw = (pct / 100) * TOTAL_HOURS * 60
-  return Math.round(raw / 15) * 15
+  return Math.round(raw / 5) * 5  // 5-minute snap for drag precision
 }
 
 function minsToDate(minsFromStart, baseDate) {

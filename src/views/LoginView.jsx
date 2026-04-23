@@ -11,10 +11,8 @@ export default function LoginView({ onLogin, theme, onThemeToggle }) {
     e.preventDefault()
     setError('')
     const user = login(email, password)
-    if (!user) {
-      setError('E-Mail oder Passwort falsch.')
-      return
-    }
+    if (!user) { setError('E-Mail oder Passwort falsch.'); return }
+    if (user === 'disabled') { setError('Dieses Konto wurde deaktiviert. Bitte Admin kontaktieren.'); return }
     onLogin(user)
   }
 
