@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
-import { getEntries, getCompanies, deleteEntry } from '../services/dataService.js'
+import { getEntries, getCompanies, deleteEntry, updateEntry } from '../services/dataService.js'
 import { fmtDurationShort } from '../utils/format.js'
 import Timeline from '../components/Timeline.jsx'
 import EntryList from '../components/EntryList.jsx'
 import ManualEntryModal from '../components/ManualEntryModal.jsx'
+import EditEntryModal from '../components/EditEntryModal.jsx'
 
 function isToday(isoString) {
   const d = new Date(isoString)
@@ -14,9 +15,10 @@ function isToday(isoString) {
 }
 
 export default function TodayView({ dataVersion, onDataChange }) {
-  const [entries, setEntries] = useState([])
-  const [companies, setCompanies] = useState([])
+  const [entries,       setEntries]       = useState([])
+  const [companies,     setCompanies]     = useState([])
   const [prefilledTimes, setPrefilledTimes] = useState(null)
+  const [editingEntry,  setEditingEntry]  = useState(null)
 
   useEffect(() => {
     setEntries(getEntries())
@@ -38,8 +40,10 @@ export default function TodayView({ dataVersion, onDataChange }) {
     onDataChange()
   }
 
-  function handleRangeSelect(startISO, endISO) {
-    setPrefilledTimes({ start: startISO, end: endISO })
+  function handleBlockMove(entryId, newStartISO, newEndISO) {
+    const duration = Math.floor((new Date(newEndISO) - new Date(newStartISO)) / 1000)
+    updateEntry(entryId, { start: newStartISO, end: newEndISO, duration })
+    onDataChange()
   }
 
   return (
@@ -52,11 +56,12 @@ export default function TodayView({ dataVersion, onDataChange }) {
       </div>
 
       <section className="section">
-        <h2 className="section-title">Zeitstrahl (07:00 – 22:00)</h2>
+        <h2 className="section-title">Zeitstrahl (06:00 – 23:00)</h2>
         <Timeline
           entries={todayEntries}
           companies={companies}
-          onRangeSelect={handleRangeSelect}
+          onRangeSelect={times => setPrefilledTimes(times)}
+          onBlockMove={handleBlockMove}
           date={new Date()}
         />
       </section>
@@ -67,6 +72,7 @@ export default function TodayView({ dataVersion, onDataChange }) {
           entries={todayEntries}
           companies={companies}
           onDelete={handleDelete}
+          onEdit={setEditingEntry}
         />
       </section>
 
@@ -76,6 +82,16 @@ export default function TodayView({ dataVersion, onDataChange }) {
           prefilledTimes={prefilledTimes}
           onClose={() => setPrefilledTimes(null)}
           onSaved={() => { onDataChange(); setPrefilledTimes(null) }}
+        />
+      )}
+
+      {editingEntry && (
+        <EditEntryModal
+          entry={editingEntry}
+          companies={companies}
+          isAdmin={false}
+          onClose={() => setEditingEntry(null)}
+          onSaved={() => { onDataChange(); setEditingEntry(null) }}
         />
       )}
     </div>

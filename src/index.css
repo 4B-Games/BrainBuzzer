@@ -610,14 +610,21 @@ html, body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 32px 16px 16px;
+  padding: 12px 20px 20px;
   overflow-x: auto;
+}
+
+.timeline-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  letter-spacing: 0.3px;
 }
 
 .timeline-track {
   position: relative;
-  height: 56px;
-  min-width: 700px;
+  height: 110px;        /* tall enough for labels + blocks */
+  min-width: 960px;     /* comfortable minimum for desktop */
 }
 
 .timeline-track--interactive {
@@ -625,71 +632,111 @@ html, body {
   user-select: none;
 }
 
-.timeline-hour {
+/* ── Tick marks ── */
+.tl-tick {
   position: absolute;
   top: 0;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0;
 }
 
-.timeline-hour-label { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
-.timeline-hour-tick { width: 1px; height: 12px; background: var(--border); }
-
-.timeline-hint {
+.tl-tick-label {
   font-size: 11px;
   color: var(--text-dim);
-  margin-bottom: 10px;
-  letter-spacing: 0.4px;
+  white-space: nowrap;
+  margin-bottom: 3px;
+  line-height: 1.2;
 }
 
-.timeline-block {
+.tl-tick-line {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+}
+
+.tl-tick--half .tl-tick-label { display: none; }  /* half-hours: tick only */
+.tl-tick--half .tl-tick-line  { height: 8px; opacity: 0.5; }
+
+/* ── Blocks ── */
+.tl-block {
   position: absolute;
-  top: 22px;
-  height: 28px;
-  border-radius: 4px;
-  min-width: 4px;
-  opacity: 0.88;
-  transition: opacity 0.15s;
-  cursor: default;
+  top: 34px;              /* below the tick/label area */
+  height: 60px;
+  border-radius: 6px;
+  min-width: 3px;
+  opacity: 0.9;
   display: flex;
   align-items: center;
-  padding: 0 4px;
+  gap: 5px;
+  padding: 0 8px;
   overflow: hidden;
+  transition: opacity 0.12s, box-shadow 0.12s;
 }
 
-.timeline-block:hover { opacity: 1; }
+.tl-block--draggable {
+  cursor: grab;
+}
 
-.timeline-block-emoji {
-  font-size: 14px;
+.tl-block--draggable:hover {
+  opacity: 1;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.3);
+}
+
+.tl-block--moving {
+  cursor: grabbing !important;
+  opacity: 1;
+  z-index: 20;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+  transition: none;   /* no lag while dragging */
+}
+
+.tl-block-emoji {
+  font-size: 16px;
   line-height: 1;
+  flex-shrink: 0;
   pointer-events: none;
 }
 
-.timeline-drag-preview {
+.tl-block-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  letter-spacing: 0.2px;
+}
+
+/* ── Create-by-drag preview ── */
+.tl-drag-preview {
   position: absolute;
-  top: 22px;
-  height: 28px;
-  border-radius: 4px;
+  top: 34px;
+  height: 60px;
+  border-radius: 6px;
   background: var(--accent);
-  opacity: 0.35;
+  opacity: 0.3;
   pointer-events: none;
   border: 2px dashed var(--accent);
 }
 
-.timeline-drag-label {
+.tl-drag-label {
   position: absolute;
-  top: 2px;
+  top: 4px;
   transform: translateX(-50%);
   background: var(--accent);
   color: #fff;
   font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
   white-space: nowrap;
   pointer-events: none;
   z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
 
 /* ── Entry List ───────────────────────────────────────────────── */
