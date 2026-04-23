@@ -7,18 +7,15 @@ import ManualEntryModal from '../components/ManualEntryModal.jsx'
 import EditEntryModal from '../components/EditEntryModal.jsx'
 
 function isToday(isoString) {
-  const d = new Date(isoString)
-  const now = new Date()
-  return d.getFullYear() === now.getFullYear()
-    && d.getMonth() === now.getMonth()
-    && d.getDate() === now.getDate()
+  const d = new Date(isoString), now = new Date()
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
 }
 
 export default function TodayView({ dataVersion, onDataChange }) {
-  const [entries,       setEntries]       = useState([])
-  const [companies,     setCompanies]     = useState([])
+  const [entries,        setEntries]        = useState([])
+  const [companies,      setCompanies]      = useState([])
   const [prefilledTimes, setPrefilledTimes] = useState(null)
-  const [editingEntry,  setEditingEntry]  = useState(null)
+  const [editingEntry,   setEditingEntry]   = useState(null)
 
   useEffect(() => {
     setEntries(getEntries())
@@ -30,33 +27,31 @@ export default function TodayView({ dataVersion, onDataChange }) {
     [entries]
   )
 
-  const totalSeconds = useMemo(
-    () => todayEntries.reduce((sum, e) => sum + e.duration, 0),
-    [todayEntries]
-  )
+  const totalSeconds = useMemo(() => todayEntries.reduce((s, e) => s + e.duration, 0), [todayEntries])
 
-  function handleDelete(id) {
-    deleteEntry(id)
-    onDataChange()
-  }
+  function handleDelete(id) { deleteEntry(id); onDataChange() }
 
-  function handleBlockMove(entryId, newStartISO, newEndISO) {
-    const duration = Math.floor((new Date(newEndISO) - new Date(newStartISO)) / 1000)
-    updateEntry(entryId, { start: newStartISO, end: newEndISO, duration })
+  function handleBlockMove(entryId, newStart, newEnd) {
+    updateEntry(entryId, {
+      start: newStart, end: newEnd,
+      duration: Math.floor((new Date(newEnd) - new Date(newStart)) / 1000),
+    })
     onDataChange()
   }
 
   return (
-    <div className="view">
-      <div className="view-header">
-        <h1>Heute</h1>
-        <span className="today-total">
-          Gesamt: <strong>{fmtDurationShort(totalSeconds)}</strong>
-        </span>
+    <>
+      {/* Header – inside the constrained view */}
+      <div className="view view--no-bottom">
+        <div className="view-header">
+          <h1>Heute</h1>
+          <span className="today-total">Gesamt: <strong>{fmtDurationShort(totalSeconds)}</strong></span>
+        </div>
+        <p className="section-title" style={{ marginBottom: 10 }}>Zeitstrahl (00:00 – 24:00)</p>
       </div>
 
-      <section className="section">
-        <h2 className="section-title">Zeitstrahl (06:00 – 23:00)</h2>
+      {/* Full-width timeline – escapes max-width */}
+      <div className="today-tl-full">
         <Timeline
           entries={todayEntries}
           companies={companies}
@@ -64,36 +59,32 @@ export default function TodayView({ dataVersion, onDataChange }) {
           onBlockMove={handleBlockMove}
           date={new Date()}
         />
-      </section>
+      </div>
 
-      <section className="section">
-        <h2 className="section-title">Einträge</h2>
-        <EntryList
-          entries={todayEntries}
-          companies={companies}
-          onDelete={handleDelete}
-          onEdit={setEditingEntry}
-        />
-      </section>
+      {/* Entry list – back inside the constrained view */}
+      <div className="view view--no-top">
+        <section className="section">
+          <h2 className="section-title">Einträge</h2>
+          <EntryList
+            entries={todayEntries}
+            companies={companies}
+            onDelete={handleDelete}
+            onEdit={setEditingEntry}
+          />
+        </section>
+      </div>
 
       {prefilledTimes && (
-        <ManualEntryModal
-          companies={companies}
-          prefilledTimes={prefilledTimes}
+        <ManualEntryModal companies={companies} prefilledTimes={prefilledTimes}
           onClose={() => setPrefilledTimes(null)}
-          onSaved={() => { onDataChange(); setPrefilledTimes(null) }}
-        />
+          onSaved={() => { onDataChange(); setPrefilledTimes(null) }} />
       )}
 
       {editingEntry && (
-        <EditEntryModal
-          entry={editingEntry}
-          companies={companies}
-          isAdmin={false}
+        <EditEntryModal entry={editingEntry} companies={companies} isAdmin={false}
           onClose={() => setEditingEntry(null)}
-          onSaved={() => { onDataChange(); setEditingEntry(null) }}
-        />
+          onSaved={() => { onDataChange(); setEditingEntry(null) }} />
       )}
-    </div>
+    </>
   )
 }

@@ -233,6 +233,21 @@ html, body {
   padding: 36px 40px;
 }
 
+.view--no-bottom { padding-bottom: 0; }
+.view--no-top    { padding-top: 12px; }
+
+/* Full-width timeline section (escapes .view max-width) */
+.today-tl-full {
+  width: 100%;
+  padding: 0 0 4px;
+}
+
+.today-tl-full .timeline {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
 .view-header {
   display: flex;
   align-items: center;
@@ -640,7 +655,7 @@ html, body {
   top: 34px;
   left: 0;
   right: 0;
-  height: 64px;
+  height: 100px;        /* matches taller block area */
   background: color-mix(in srgb, var(--surface2) 60%, transparent);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -649,7 +664,7 @@ html, body {
 
 .timeline-track {
   position: relative;
-  height: 108px;
+  height: 148px;        /* generous height */
   min-width: 900px;
   padding: 0 2px;
 }
@@ -700,7 +715,7 @@ html, body {
 .tl-block {
   position: absolute;
   top: 36px;
-  height: 60px;
+  height: 96px;
   border-radius: 7px;
   min-width: 3px;
   opacity: 0.92;
@@ -748,11 +763,51 @@ html, body {
   text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
+/* ── Resize handles ── */
+.tl-block-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  cursor: ew-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.tl-block:hover .tl-block-handle,
+.tl-block--resizing .tl-block-handle { opacity: 1; }
+
+.tl-block-handle--left  { left: 0;  border-radius: 7px 0 0 7px; background: rgba(0,0,0,0.15); }
+.tl-block-handle--right { right: 0; border-radius: 0 7px 7px 0; background: rgba(0,0,0,0.15); }
+
+.tl-block-handle::after {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 28px;
+  border-left:  2px solid rgba(255,255,255,0.65);
+  border-right: 2px solid rgba(255,255,255,0.65);
+  border-radius: 1px;
+}
+
+.tl-block--resizing {
+  cursor: ew-resize !important;
+  opacity: 1;
+  z-index: 20;
+  filter: brightness(1.1);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+  transition: none;
+}
+
 /* ── Create-by-drag preview ── */
 .tl-drag-preview {
   position: absolute;
   top: 36px;
-  height: 60px;
+  height: 96px;
   border-radius: 7px;
   background: var(--accent);
   opacity: 0.28;

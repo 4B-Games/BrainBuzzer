@@ -120,7 +120,7 @@ export default function EmojiPicker({ value, onChange }) {
           onClick={handleOpen}
           title="Emoji wählen"
         >
-          {value || '📁'}
+          {value || '😊'}
         </button>
         {value && (
           <button type="button" className="emoji-clear-btn" onClick={handleClear} title="Entfernen">
