@@ -47,7 +47,8 @@ html, body {
   font-family: 'IBM Plex Mono', monospace;
   background: var(--bg);
   color: var(--text);
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 500;
   line-height: 1.5;
   transition: background 0.2s, color 0.2s;
 }
@@ -805,10 +806,17 @@ html, body {
   background: color-mix(in srgb, var(--border) 70%, transparent);
 }
 
-/* Medium lines (30 min): medium height */
+/* Medium lines (30 min): taller + half-label */
 .tl-tick--medium .tl-tick-line {
-  height: 14px;
-  background: color-mix(in srgb, var(--border) 50%, transparent);
+  height: calc(100% - 17px);          /* full height like hours, but thinner */
+  background: color-mix(in srgb, var(--border) 45%, transparent);
+}
+
+/* Smaller, dimmer label for half-hours */
+.tl-tick--medium .tl-tick-label {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.65;
 }
 
 /* Small lines (10/20/40/50 min): short */

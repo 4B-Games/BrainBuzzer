@@ -1,8 +1,8 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
 import { fmtTime, fmtDurationShort } from '../utils/format.js'
 
-const VIEWPORT_HOURS = 12
-const MAX_VIEW_START = 24 - VIEWPORT_HOURS
+const VIEWPORT_HOURS = 6
+const MAX_VIEW_START = 24 - VIEWPORT_HOURS   // = 18
 const MIN_BLOCK_MINS = 5
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -51,7 +51,11 @@ function buildTicks(viewStart) {
     const type = moh === 0 ? 'hour' : moh === 30 ? 'medium' : 'small'
     const pct  = ((m - startM) / (VIEWPORT_HOURS * 60)) * 100
     const h    = Math.floor(m / 60)
-    ticks.push({ pct, type, label: type === 'hour' ? `${String(h < 24 ? h : 0).padStart(2,'0')}:00` : null })
+    const hStr  = String(h < 24 ? h : 0).padStart(2,'0')
+    const label = type === 'hour'   ? `${hStr}:00`
+                : type === 'medium' ? `${hStr}:30`
+                : null
+    ticks.push({ pct, type, label })
   }
   return ticks
 }
@@ -84,7 +88,8 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
   const ticks      = useMemo(() => buildTicks(viewStart), [viewStart])
 
   const viewEndH   = viewStart + VIEWPORT_HOURS
-  const rangeLabel = `${String(Math.floor(viewStart)).padStart(2,'0')}:00 – ${String(Math.floor(viewEndH) < 24 ? Math.floor(viewEndH) : 0).padStart(2,'0')}:00`
+  const endHLabel  = viewEndH >= 24 ? '24:00' : `${String(Math.floor(viewEndH)).padStart(2,'0')}:00`
+  const rangeLabel = `${String(Math.floor(viewStart)).padStart(2,'0')}:00 – ${endHLabel}`
 
   const nowMins    = nowTime.getHours() * 60 + nowTime.getMinutes()
   const nowPct     = ((nowMins - viewStart * 60) / (VIEWPORT_HOURS * 60)) * 100
