@@ -762,22 +762,21 @@ html, body {
   background: color-mix(in srgb, var(--bg) 70%, var(--surface));
 }
 
-/* The block-area background stripe */
+/* Block area fills top, tick area at bottom */
 .timeline-blocks-bg {
   position: absolute;
-  top: 34px;
+  top: 0;
   left: 0;
   right: 0;
-  height: 162px;
+  bottom: 38px;
   background: color-mix(in srgb, var(--surface2) 60%, transparent);
-  border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   pointer-events: none;
 }
 
 .timeline-track {
   position: relative;
-  height: 210px;        /* extra tall for good readability */
+  height: 220px;
   min-width: 900px;
   padding: 0 2px;
 }
@@ -787,48 +786,55 @@ html, body {
   user-select: none;
 }
 
-/* ── Tick marks ── */
+/* ── Tick marks – AT BOTTOM ── */
 .tl-tick {
   position: absolute;
-  top: 0;
+  bottom: 0;
+  height: 38px;
   transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
-.tl-tick-label {
-  font-size: 11px;
-  color: var(--text-dim);
-  white-space: nowrap;
-  margin-bottom: 2px;
-  line-height: 1.2;
-  font-weight: 500;
+/* Lines anchored to the same baseline (17px from bottom = above labels) */
+.tl-tick-line {
+  position: absolute;
+  bottom: 17px;
+  left: 0;
+  transform: translateX(-50%);
+  width: 1px;
 }
 
-/* hour: tall line */
 .tl-tick--hour .tl-tick-line {
-  width: 1px; height: 22px;
+  height: 20px;
   background: color-mix(in srgb, var(--text-dim) 60%, transparent);
 }
 
-/* medium (30 min): medium line, no label */
 .tl-tick--medium .tl-tick-line {
-  width: 1px; height: 12px; margin-top: 14px;
+  height: 10px;
   background: var(--border);
 }
 
-/* small (10/20/40/50 min): short line, no label */
 .tl-tick--small .tl-tick-line {
-  width: 1px; height: 7px; margin-top: 19px;
-  background: color-mix(in srgb, var(--border) 70%, transparent);
+  height: 5px;
+  background: color-mix(in srgb, var(--border) 60%, transparent);
 }
 
-/* ── Blocks ── */
+.tl-tick-label {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+  line-height: 16px;
+}
+
+/* ── Blocks – start from top ── */
 .tl-block {
   position: absolute;
-  top: 36px;
-  height: 156px;
+  top: 4px;
+  height: 174px;         /* 220 total - 38 tick area - 4 top margin - 4 bottom margin */
   border-radius: 7px;
   min-width: 3px;
   opacity: 0.92;
@@ -901,6 +907,16 @@ html, body {
   font-size: 26px;
   line-height: 1;
   pointer-events: none;
+}
+
+.tl-block-duration {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.80);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  pointer-events: none;
+  margin-top: 3px;
+  letter-spacing: 0.3px;
 }
 
 /* Label shown during move/resize */
@@ -998,8 +1014,8 @@ html, body {
 /* ── Create-by-drag preview ── */
 .tl-drag-preview {
   position: absolute;
-  top: 36px;
-  height: 156px;
+  top: 4px;
+  height: 174px;
   border-radius: 7px;
   background: var(--accent);
   opacity: 0.28;

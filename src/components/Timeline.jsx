@@ -1,9 +1,9 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
 import { fmtTime, fmtDurationShort } from '../utils/format.js'
 
-const VIEWPORT_HOURS  = 12
-const MAX_VIEW_START  = 24 - VIEWPORT_HOURS
-const MIN_BLOCK_MINS  = 5
+const VIEWPORT_HOURS = 12
+const MAX_VIEW_START = 24 - VIEWPORT_HOURS
+const MIN_BLOCK_MINS = 5
 
 // ── Helpers ───────────────────────────────────────────────────────
 
@@ -50,7 +50,8 @@ function buildTicks(viewStart) {
     const moh  = m % 60
     const type = moh === 0 ? 'hour' : moh === 30 ? 'medium' : 'small'
     const pct  = ((m - startM) / (VIEWPORT_HOURS * 60)) * 100
-    ticks.push({ pct, type, label: type === 'hour' ? `${String(Math.floor(m/60) < 24 ? Math.floor(m/60) : 0).padStart(2,'0')}:00` : null })
+    const h    = Math.floor(m / 60)
+    ticks.push({ pct, type, label: type === 'hour' ? `${String(h < 24 ? h : 0).padStart(2,'0')}:00` : null })
   }
   return ticks
 }
@@ -73,7 +74,6 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
   const [resizingBlock, setResizingBlock] = useState(null)
   const [nowTime,       setNowTime]       = useState(() => new Date())
 
-  // Keep "now" line updated every minute
   useEffect(() => {
     const t = setInterval(() => setNowTime(new Date()), 60_000)
     return () => clearInterval(t)
@@ -86,7 +86,6 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
   const viewEndH   = viewStart + VIEWPORT_HOURS
   const rangeLabel = `${String(Math.floor(viewStart)).padStart(2,'0')}:00 – ${String(Math.floor(viewEndH) < 24 ? Math.floor(viewEndH) : 0).padStart(2,'0')}:00`
 
-  // "Now" line
   const nowMins    = nowTime.getHours() * 60 + nowTime.getMinutes()
   const nowPct     = ((nowMins - viewStart * 60) / (VIEWPORT_HOURS * 60)) * 100
   const nowVisible = nowPct >= 0 && nowPct <= 100
@@ -97,7 +96,7 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
     setViewStart(Math.max(0, Math.min(MAX_VIEW_START, Math.round((h - VIEWPORT_HOURS / 2) * 4) / 4)))
   }
 
-  // ── Drag to create ────────────────────────────────────────────
+  // ── Create-by-drag ────────────────────────────────────────────
 
   function handleTrackMouseDown(e) {
     if (!onRangeSelect) return
@@ -126,11 +125,11 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
     if (!onBlockMove) return
     if (e.target.closest('.tl-block-handle')) return
     e.preventDefault(); e.stopPropagation()
-    const tw     = trackRef.current.getBoundingClientRect().width
-    const sd     = new Date(entry.start)
-    const orig   = sd.getHours() * 60 + sd.getMinutes()
-    const dur    = Math.round(entry.duration / 60)
-    const mb = { entryId: entry.id, origMins: orig, durMins: dur, deltaX: 0, startX: e.clientX, trackWidth: tw }
+    const tw   = trackRef.current.getBoundingClientRect().width
+    const sd   = new Date(entry.start)
+    const orig = sd.getHours() * 60 + sd.getMinutes()
+    const dur  = Math.round(entry.duration / 60)
+    const mb   = { entryId: entry.id, origMins: orig, durMins: dur, deltaX: 0, startX: e.clientX, trackWidth: tw }
     movingRef.current = mb; setMovingBlock({ ...mb })
     function onMove(ev) {
       const u = { ...movingRef.current, deltaX: ev.clientX - movingRef.current.startX }
@@ -141,7 +140,7 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
       const mb2 = movingRef.current
       if (mb2) {
         const dM = snap5((mb2.deltaX / mb2.trackWidth) * VIEWPORT_HOURS * 60)
-        const s  = Math.max(0, Math.min(24*60 - mb2.durMins, mb2.origMins + dM))
+        const s  = Math.max(0, Math.min(24 * 60 - mb2.durMins, mb2.origMins + dM))
         onBlockMove(mb2.entryId, midMinsToDate(s, baseDate).toISOString(), midMinsToDate(s + mb2.durMins, baseDate).toISOString())
       }
       movingRef.current = null; setMovingBlock(null)
@@ -154,8 +153,8 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
   function handleResizeMouseDown(e, entry, side) {
     if (!onBlockMove) return
     e.preventDefault(); e.stopPropagation()
-    const tw = trackRef.current.getBoundingClientRect().width
-    const sd = new Date(entry.start), ed = new Date(entry.end)
+    const tw   = trackRef.current.getBoundingClientRect().width
+    const sd   = new Date(entry.start), ed = new Date(entry.end)
     const origS = sd.getHours() * 60 + sd.getMinutes()
     const origE = ed.getHours() * 60 + ed.getMinutes()
     const rb = { entryId: entry.id, side, origStartM: origS, origEndM: origE, deltaX: 0, startX: e.clientX, trackWidth: tw }
@@ -171,7 +170,7 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
         const dM = snap5((rb2.deltaX / rb2.trackWidth) * VIEWPORT_HOURS * 60)
         let s, en
         if (rb2.side === 'left') { s = Math.max(0, Math.min(rb2.origEndM - MIN_BLOCK_MINS, rb2.origStartM + dM)); en = rb2.origEndM }
-        else { s = rb2.origStartM; en = Math.max(rb2.origStartM + MIN_BLOCK_MINS, Math.min(24*60, rb2.origEndM + dM)) }
+        else { s = rb2.origStartM; en = Math.max(rb2.origStartM + MIN_BLOCK_MINS, Math.min(24 * 60, rb2.origEndM + dM)) }
         onBlockMove(rb2.entryId, midMinsToDate(s, baseDate).toISOString(), midMinsToDate(en, baseDate).toISOString())
       }
       resizingRef.current = null; setResizingBlock(null)
@@ -184,16 +183,16 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
   function getVisualPos(entry) {
     if (movingBlock?.entryId === entry.id) {
       const dM = snap5((movingBlock.deltaX / movingBlock.trackWidth) * VIEWPORT_HOURS * 60)
-      const s  = Math.max(0, Math.min(24*60 - movingBlock.durMins, movingBlock.origMins + dM))
-      return { leftPct: ((s - viewStart*60) / (VIEWPORT_HOURS*60)) * 100, widthPct: (movingBlock.durMins / (VIEWPORT_HOURS*60)) * 100, startLabel: minsToLabel(s), endLabel: minsToLabel(s + movingBlock.durMins), type: 'move' }
+      const s  = Math.max(0, Math.min(24 * 60 - movingBlock.durMins, movingBlock.origMins + dM))
+      return { leftPct: ((s - viewStart * 60) / (VIEWPORT_HOURS * 60)) * 100, widthPct: (movingBlock.durMins / (VIEWPORT_HOURS * 60)) * 100, startLabel: minsToLabel(s), endLabel: minsToLabel(s + movingBlock.durMins), type: 'move' }
     }
     if (resizingBlock?.entryId === entry.id) {
       const rb = resizingBlock
       const dM = snap5((rb.deltaX / rb.trackWidth) * VIEWPORT_HOURS * 60)
       let s, en
       if (rb.side === 'left') { s = Math.max(0, Math.min(rb.origEndM - MIN_BLOCK_MINS, rb.origStartM + dM)); en = rb.origEndM }
-      else { s = rb.origStartM; en = Math.max(rb.origStartM + MIN_BLOCK_MINS, Math.min(24*60, rb.origEndM + dM)) }
-      return { leftPct: ((s - viewStart*60) / (VIEWPORT_HOURS*60)) * 100, widthPct: ((en-s) / (VIEWPORT_HOURS*60)) * 100, startLabel: minsToLabel(s), endLabel: minsToLabel(en), type: 'resize' }
+      else { s = rb.origStartM; en = Math.max(rb.origStartM + MIN_BLOCK_MINS, Math.min(24 * 60, rb.origEndM + dM)) }
+      return { leftPct: ((s - viewStart * 60) / (VIEWPORT_HOURS * 60)) * 100, widthPct: ((en - s) / (VIEWPORT_HOURS * 60)) * 100, startLabel: minsToLabel(s), endLabel: minsToLabel(en), type: 'resize' }
     }
     return null
   }
@@ -205,11 +204,7 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
 
   return (
     <div className="timeline">
-      {onRangeSelect && (
-        <p className="timeline-hint">
-          Freie Fläche ziehen → Eintrag erstellen &nbsp;·&nbsp; Block ziehen → verschieben &nbsp;·&nbsp; ◀▶ Enden → Größe ändern
-        </p>
-      )}
+      {/* no hint text */}
 
       <div className="timeline-track-wrap">
         <div className="timeline-blocks-bg" />
@@ -219,15 +214,15 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
           ref={trackRef}
           onMouseDown={handleTrackMouseDown}
         >
-          {/* Ticks */}
+          {/* Ticks – positioned at the bottom */}
           {ticks.map(({ pct, type, label }) => (
             <div key={pct} className={`tl-tick tl-tick--${type}`} style={{ left: `${pct}%` }}>
-              {label && <span className="tl-tick-label">{label}</span>}
               <div className="tl-tick-line" />
+              {label && <span className="tl-tick-label">{label}</span>}
             </div>
           ))}
 
-          {/* "Now" indicator */}
+          {/* Now line */}
           {nowVisible && (
             <div className="tl-now-line" style={{ left: `${nowPct}%` }}>
               <span className="tl-now-label">{nowLabel}</span>
@@ -256,34 +251,23 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
                 ].filter(Boolean).join(' ')}
                 style={{ left: `${leftPct}%`, width: `${Math.max(widthPct, 0.25)}%`, background: color }}
                 onMouseDown={e => handleBlockMouseDown(e, entry)}
-                title={`${fmtTime(entry.start)} – ${fmtTime(entry.end)}${company ? '\n' + company.name : ''}${project ? ' · ' + (project.emoji ?? '') + ' ' + project.name : ''}`}
+                title={`${fmtTime(entry.start)} – ${fmtTime(entry.end)}${company ? '\n' + company.name : ''}${project ? ' · ' + (project.emoji ?? '') + ' ' + project.name : ''}\n${fmtDurationShort(entry.duration)}`}
               >
                 {onBlockMove && <div className="tl-block-handle tl-block-handle--left" onMouseDown={e => handleResizeMouseDown(e, entry, 'left')} />}
 
-                {/* Block content */}
                 {isActive ? (
-                  widthPct > 3 && (
-                    <span className="tl-block-label tl-block-label--time">
-                      {visual.startLabel} – {visual.endLabel}
-                    </span>
-                  )
+                  widthPct > 3 && <span className="tl-block-label tl-block-label--time">{visual.startLabel} – {visual.endLabel}</span>
                 ) : (
                   <div className="tl-block-info">
-                    {widthPct > 4 && (
-                      <span className="tl-block-company">{company?.name ?? ''}</span>
-                    )}
+                    {widthPct > 4 && <span className="tl-block-company">{company?.name ?? ''}</span>}
                     {widthPct > 3 && project && (
-                      <span className="tl-block-project">
-                        {project.emoji ? project.emoji + ' ' : ''}{project.name}
-                      </span>
+                      <span className="tl-block-project">{project.emoji ? project.emoji + ' ' : ''}{project.name}</span>
                     )}
-                    {widthPct <= 3 && widthPct > 1.5 && project?.emoji && (
+                    {widthPct > 2 && (
+                      <span className="tl-block-duration">{fmtDurationShort(entry.duration)}</span>
+                    )}
+                    {widthPct <= 2 && widthPct > 1 && project?.emoji && (
                       <span className="tl-block-emoji-solo">{project.emoji}</span>
-                    )}
-                    {widthPct <= 3 && widthPct > 1.5 && !project?.emoji && company && (
-                      <span className="tl-block-label tl-block-label--narrow">
-                        {company.name.slice(0, 3)}
-                      </span>
                     )}
                   </div>
                 )}
@@ -307,6 +291,7 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
         </div>
       </div>
 
+      {/* Viewport slider */}
       <div className="tl-slider-row">
         <span className="tl-slider-bound">00:00</span>
         <div className="tl-slider-wrap">

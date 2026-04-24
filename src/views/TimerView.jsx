@@ -12,26 +12,23 @@ export default function TimerView({
   onTimerStart, onTimerStop,
   onDataChange, activeEntry,
 }) {
-  const [companies,      setCompanies]      = useState([])
-  const [todayEntries,   setTodayEntries]   = useState([])
+  const [companies,         setCompanies]         = useState([])
+  const [todayEntries,      setTodayEntries]       = useState([])
   const [selectedCompanyId, setSelectedCompanyId] = useState(null)
   const [selectedProjectId, setSelectedProjectId] = useState(null)
-  const [note,           setNote]           = useState('')
-  const [showModal,      setShowModal]      = useState(false)
-  const [prefilledTimes, setPrefilledTimes] = useState(null)
-  const [tlVersion,      setTlVersion]      = useState(0)
+  const [note,              setNote]              = useState('')
+  const [showModal,         setShowModal]          = useState(false)
+  const [prefilledTimes,    setPrefilledTimes]     = useState(null)
+  const [tlVersion,         setTlVersion]          = useState(0)
 
   function loadData() {
-    const cos = getCompanies()
-    setCompanies(cos)
+    setCompanies(getCompanies())
     setTodayEntries(
       getEntries().filter(e => isToday(e.start)).sort((a, b) => new Date(a.start) - new Date(b.start))
     )
   }
 
   useEffect(() => { loadData() }, [tlVersion])
-
-  // Clear note when timer stops
   useEffect(() => { if (!timerRunning) setNote('') }, [timerRunning])
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId)
@@ -39,8 +36,7 @@ export default function TimerView({
 
   function handleCompanySelect(id) {
     if (timerRunning) return
-    setSelectedCompanyId(id)
-    setSelectedProjectId(null)
+    setSelectedCompanyId(id); setSelectedProjectId(null)
   }
 
   function handleProjectSelect(id) {
@@ -62,87 +58,48 @@ export default function TimerView({
   }
 
   function handleBlockMove(entryId, newStart, newEnd) {
-    updateEntry(entryId, {
-      start: newStart, end: newEnd,
-      duration: Math.floor((new Date(newEnd) - new Date(newStart)) / 1000),
-    })
-    setTlVersion(v => v + 1)
-    onDataChange()
+    updateEntry(entryId, { start: newStart, end: newEnd, duration: Math.floor((new Date(newEnd) - new Date(newStart)) / 1000) })
+    setTlVersion(v => v + 1); onDataChange()
   }
 
   return (
-    <div className="view">
-      <div className="view-header">
-        <h1>Timer</h1>
-        <button className="btn-secondary" onClick={() => setShowModal(true)}>
-          <PlusCircle size={16} /> Manuell erfassen
-        </button>
-      </div>
-
-      {timerRunning && activeEntry && (
-        <TimerBanner
-          activeEntry={{ ...activeEntry, elapsed: timerElapsed }}
-          onStop={onTimerStop}
-        />
-      )}
-
-      {!timerRunning && (
-        <>
-          <section className="section">
-            <h2 className="section-title">Unternehmen wählen</h2>
-            <TileGrid items={companies} selected={selectedCompanyId} onSelect={handleCompanySelect}
-              emptyText="Noch keine Unternehmen – bitte in den Einstellungen anlegen." />
-          </section>
-
-          {selectedCompany?.projects.length > 0 && (
-            <section className="section">
-              <h2 className="section-title">Projekt wählen</h2>
-              <TileGrid
-                items={selectedCompany.projects.map(p => ({ ...p, color: selectedCompany.color }))}
-                selected={selectedProjectId}
-                onSelect={handleProjectSelect}
-              />
-            </section>
-          )}
-
-          {selectedCompanyId && (
-            <section className="section">
-              <div className="timer-actions">
-                <input className="note-input" type="text" placeholder="Optionale Notiz …"
-                  value={note} onChange={e => setNote(e.target.value)} />
-                <button className="btn-start" onClick={handleStart}
-                  style={{ background: selectedCompany?.color }}>
-                  <Play size={18} fill="currentColor" /> Starten
-                </button>
-              </div>
-            </section>
-          )}
-        </>
-      )}
-
-      {timerRunning && (
-        <div className="timer-running-display">
-          <div className="timer-clock" style={{ color: selectedCompany?.color ?? activeEntry?.companyColor }}>
-            {fmtDuration(timerElapsed)}
-          </div>
-          <p className="timer-running-label">
-            {activeEntry?.companyName}
-            {activeEntry?.projectName
-              ? ` · ${activeEntry.projectEmoji ? activeEntry.projectEmoji + ' ' : ''}${activeEntry.projectName}`
-              : ''}
-          </p>
-          <button className="btn-stop-large" onClick={onTimerStop}>
-            ■ &nbsp;Timer stoppen
+    <>
+      {/* ── Header + running banner ── */}
+      <div className="view view--no-bottom">
+        <div className="view-header">
+          <h1>Timer</h1>
+          <button className="btn-secondary" onClick={() => setShowModal(true)}>
+            <PlusCircle size={16} /> Manuell erfassen
           </button>
         </div>
-      )}
 
-      {/* Today's timeline */}
-      <section className="section" style={{ marginBottom: 8 }}>
-        <h2 className="section-title">Heutige Einträge – Zeitstrahl</h2>
-      </section>
+        {timerRunning && activeEntry && (
+          <>
+            <TimerBanner activeEntry={{ ...activeEntry, elapsed: timerElapsed }} onStop={onTimerStop} />
+            <div className="timer-running-display" style={{ paddingTop: 16, paddingBottom: 8 }}>
+              <div className="timer-clock" style={{ color: activeEntry?.companyColor }}>
+                {fmtDuration(timerElapsed)}
+              </div>
+              <p className="timer-running-label">
+                {activeEntry?.companyName}
+                {activeEntry?.projectName
+                  ? ` · ${activeEntry.projectEmoji ? activeEntry.projectEmoji + ' ' : ''}${activeEntry.projectName}`
+                  : ''}
+              </p>
+              <button className="btn-stop-large" onClick={onTimerStop}>
+                ■ &nbsp;Timer stoppen
+              </button>
+            </div>
+          </>
+        )}
 
-      <div style={{ marginLeft: -40, marginRight: -40 }}>
+        <p className="section-title" style={{ marginBottom: 10, marginTop: timerRunning ? 20 : 0 }}>
+          Heutiger Zeitstrahl
+        </p>
+      </div>
+
+      {/* ── Full-width timeline ── */}
+      <div className="today-tl-full">
         <Timeline
           entries={todayEntries}
           companies={companies}
@@ -152,19 +109,54 @@ export default function TimerView({
         />
       </div>
 
+      {/* ── Controls below timeline ── */}
+      <div className="view view--no-top">
+        {!timerRunning && (
+          <>
+            <section className="section">
+              <h2 className="section-title">Unternehmen wählen</h2>
+              <TileGrid items={companies} selected={selectedCompanyId} onSelect={handleCompanySelect}
+                emptyText="Noch keine Unternehmen – bitte in den Einstellungen anlegen." />
+            </section>
+
+            {selectedCompany?.projects.length > 0 && (
+              <section className="section">
+                <h2 className="section-title">Projekt wählen</h2>
+                <TileGrid
+                  items={selectedCompany.projects.map(p => ({ ...p, color: selectedCompany.color }))}
+                  selected={selectedProjectId}
+                  onSelect={handleProjectSelect}
+                />
+              </section>
+            )}
+
+            {selectedCompanyId && (
+              <section className="section">
+                <div className="timer-actions">
+                  <input className="note-input" type="text" placeholder="Optionale Notiz …"
+                    value={note} onChange={e => setNote(e.target.value)} />
+                  <button className="btn-start" onClick={handleStart}
+                    style={{ background: selectedCompany?.color }}>
+                    <Play size={18} fill="currentColor" /> Starten
+                  </button>
+                </div>
+              </section>
+            )}
+          </>
+        )}
+      </div>
+
       {showModal && (
         <ManualEntryModal companies={companies}
           onClose={() => setShowModal(false)}
-          onSaved={() => { onDataChange(); setTlVersion(v => v + 1) }}
-        />
+          onSaved={() => { onDataChange(); setTlVersion(v => v + 1) }} />
       )}
 
       {prefilledTimes && (
         <ManualEntryModal companies={companies} prefilledTimes={prefilledTimes}
           onClose={() => setPrefilledTimes(null)}
-          onSaved={() => { onDataChange(); setPrefilledTimes(null); setTlVersion(v => v + 1) }}
-        />
+          onSaved={() => { onDataChange(); setPrefilledTimes(null); setTlVersion(v => v + 1) }} />
       )}
-    </div>
+    </>
   )
 }
