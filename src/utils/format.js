@@ -64,3 +64,11 @@ export function fmtTimeInput(date) {
 export function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
 }
+
+/** Returns true if the ISO string is today */
+export function isToday(isoString) {
+  const d = new Date(isoString), now = new Date()
+  return d.getFullYear() === now.getFullYear()
+    && d.getMonth() === now.getMonth()
+    && d.getDate() === now.getDate()
+}

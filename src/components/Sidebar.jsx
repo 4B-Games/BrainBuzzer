@@ -19,14 +19,6 @@ export default function Sidebar({ page, onNavigate, activeEntry, currentUser, on
         <span>Brain<strong>Buzzer</strong></span>
       </div>
 
-      {activeEntry && (
-        <div className="sidebar-timer-badge" style={{ borderColor: activeEntry.companyColor }}>
-          <span className="sidebar-timer-dot" style={{ background: activeEntry.companyColor }} />
-          <span className="sidebar-timer-label">{activeEntry.companyName}</span>
-          <span className="sidebar-timer-elapsed">{fmtDuration(activeEntry.elapsed)}</span>
-        </div>
-      )}
-
       <nav className="sidebar-nav">
         {NAV.map(({ id, label, Icon }) => (
           <button
@@ -39,6 +31,29 @@ export default function Sidebar({ page, onNavigate, activeEntry, currentUser, on
           </button>
         ))}
       </nav>
+
+      {/* Active timer banner – below Settings, clickable → Timer page */}
+      {activeEntry && (
+        <button
+          className="sat-banner"
+          style={{ borderColor: activeEntry.companyColor }}
+          onClick={() => onNavigate('timer')}
+          title="Zum Timer"
+        >
+          <span className="sat-dot" style={{ background: activeEntry.companyColor }} />
+          <div className="sat-info">
+            <span className="sat-company">{activeEntry.companyName}</span>
+            {(activeEntry.projectName || activeEntry.projectEmoji) && (
+              <span className="sat-project">
+                {activeEntry.projectEmoji ? activeEntry.projectEmoji + ' ' : ''}
+                {activeEntry.projectName}
+              </span>
+            )}
+            <span className="sat-elapsed">{fmtDuration(activeEntry.elapsed)}</span>
+          </div>
+          <span className="sat-hint">→ Timer</span>
+        </button>
+      )}
 
       <div className="sidebar-bottom">
         <button className="sidebar-theme-btn" onClick={onThemeToggle} title="Design wechseln">

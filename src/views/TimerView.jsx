@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { Play, PlusCircle } from 'lucide-react'
 import { useTimer } from '../hooks/useTimer.js'
-import { getCompanies, addEntry } from '../services/dataService.js'
+import { getCompanies, getEntries, addEntry, updateEntry } from '../services/dataService.js'
 import { getCurrentUser } from '../services/authService.js'
-import { uid, fmtDuration } from '../utils/format.js'
+import { uid, fmtDuration, isToday } from '../utils/format.js'
 import TileGrid from '../components/TileGrid.jsx'
 import TimerBanner from '../components/TimerBanner.jsx'
 import ManualEntryModal from '../components/ManualEntryModal.jsx'
+import Timeline from '../components/Timeline.jsx'
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000
 
@@ -26,22 +27,31 @@ function sendReminder(companyName, projectName) {
 }
 
 export default function TimerView({ onEntryStart, onEntryStop, onDataChange, activeEntry }) {
-  const [companies, setCompanies] = useState([])
+  const [companies,      setCompanies]      = useState([])
+  const [todayEntries,   setTodayEntries]   = useState([])
   const [selectedCompanyId, setSelectedCompanyId] = useState(null)
   const [selectedProjectId, setSelectedProjectId] = useState(null)
-  const [note, setNote] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [timerStart, setTimerStart] = useState(null)
+  const [note,           setNote]           = useState('')
+  const [showModal,      setShowModal]      = useState(false)
+  const [prefilledTimes, setPrefilledTimes] = useState(null)
+  const [timerStart,     setTimerStart]     = useState(null)
+  const [tlVersion,      setTlVersion]      = useState(0)   // local refresh counter for timeline
   const notifTimeout = useRef(null)
 
   const { running, elapsed, start, stop, reset } = useTimer()
 
-  useEffect(() => {
-    setCompanies(getCompanies())
-    requestNotificationPermission()
-  }, [])
+  function loadData() {
+    const cos = getCompanies()
+    setCompanies(cos)
+    const all = getEntries()
+    setTodayEntries(all.filter(e => isToday(e.start)).sort((a, b) => new Date(a.start) - new Date(b.start)))
+  }
 
-  // Cleanup notification timeout on unmount
+  useEffect(() => {
+    loadData()
+    requestNotificationPermission()
+  }, [tlVersion])
+
   useEffect(() => () => clearTimeout(notifTimeout.current), [])
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId)
@@ -63,14 +73,14 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
     const startIso = start()
     setTimerStart(startIso)
     onEntryStart({
-      companyId:   selectedCompanyId,
-      companyName: selectedCompany?.name ?? '',
+      companyId:    selectedCompanyId,
+      companyName:  selectedCompany?.name ?? '',
       companyColor: selectedCompany?.color ?? '#6366f1',
-      projectName: selectedProject?.name ?? '',
+      projectId:    selectedProjectId ?? null,
+      projectName:  selectedProject?.name ?? '',
+      projectEmoji: selectedProject?.emoji ?? '',
       elapsed: 0,
     })
-
-    // Schedule 2-hour inactivity reminder
     clearTimeout(notifTimeout.current)
     notifTimeout.current = setTimeout(
       () => sendReminder(selectedCompany?.name ?? '', selectedProject?.name ?? ''),
@@ -78,11 +88,8 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
     )
   }
 
-  // Keep elapsed in sync with the banner in App.jsx
   useEffect(() => {
-    if (running && activeEntry) {
-      onEntryStart({ ...activeEntry, elapsed })
-    }
+    if (running && activeEntry) onEntryStart({ ...activeEntry, elapsed })
   }, [elapsed]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleStop() {
@@ -95,14 +102,22 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
       companyId: selectedCompanyId,
       projectId: selectedProjectId ?? null,
       start: timerStart,
-      end,
-      duration,
-      note,
+      end, duration, note,
     })
     onEntryStop()
     onDataChange()
     setNote('')
     reset()
+    setTlVersion(v => v + 1)
+  }
+
+  function handleBlockMove(entryId, newStart, newEnd) {
+    updateEntry(entryId, {
+      start: newStart, end: newEnd,
+      duration: Math.floor((new Date(newEnd) - new Date(newStart)) / 1000),
+    })
+    setTlVersion(v => v + 1)
+    onDataChange()
   }
 
   return (
@@ -110,8 +125,7 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
       <div className="view-header">
         <h1>Timer</h1>
         <button className="btn-secondary" onClick={() => setShowModal(true)}>
-          <PlusCircle size={16} />
-          Manuell erfassen
+          <PlusCircle size={16} /> Manuell erfassen
         </button>
       </div>
 
@@ -123,12 +137,8 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
         <>
           <section className="section">
             <h2 className="section-title">Unternehmen wählen</h2>
-            <TileGrid
-              items={companies}
-              selected={selectedCompanyId}
-              onSelect={handleCompanySelect}
-              emptyText="Noch keine Unternehmen – bitte in den Einstellungen anlegen."
-            />
+            <TileGrid items={companies} selected={selectedCompanyId} onSelect={handleCompanySelect}
+              emptyText="Noch keine Unternehmen – bitte in den Einstellungen anlegen." />
           </section>
 
           {selectedCompany?.projects.length > 0 && (
@@ -145,20 +155,11 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
           {selectedCompanyId && (
             <section className="section">
               <div className="timer-actions">
-                <input
-                  className="note-input"
-                  type="text"
-                  placeholder="Optionale Notiz …"
-                  value={note}
-                  onChange={e => setNote(e.target.value)}
-                />
-                <button
-                  className="btn-start"
-                  onClick={handleStart}
-                  style={{ background: selectedCompany?.color }}
-                >
-                  <Play size={18} fill="currentColor" />
-                  Starten
+                <input className="note-input" type="text" placeholder="Optionale Notiz …"
+                  value={note} onChange={e => setNote(e.target.value)} />
+                <button className="btn-start" onClick={handleStart}
+                  style={{ background: selectedCompany?.color }}>
+                  <Play size={18} fill="currentColor" /> Starten
                 </button>
               </div>
             </section>
@@ -173,16 +174,40 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
           </div>
           <p className="timer-running-label">
             {selectedCompany?.name}
-            {selectedProject ? ` · ${selectedProject.emoji ? selectedProject.emoji + ' ' : ''}${selectedProject.name}` : ''}
+            {selectedProject
+              ? ` · ${selectedProject.emoji ? selectedProject.emoji + ' ' : ''}${selectedProject.name}`
+              : ''}
           </p>
         </div>
       )}
 
-      {showModal && (
-        <ManualEntryModal
+      {/* ── Today's timeline ── */}
+      <section className="section">
+        <h2 className="section-title">Heutige Einträge – Zeitstrahl</h2>
+      </section>
+
+      {/* Full-width timeline – same pattern as TodayView */}
+      <div style={{ marginLeft: -40, marginRight: -40 }}>
+        <Timeline
+          entries={todayEntries}
           companies={companies}
+          onRangeSelect={times => setPrefilledTimes(times)}
+          onBlockMove={handleBlockMove}
+          date={new Date()}
+        />
+      </div>
+
+      {showModal && (
+        <ManualEntryModal companies={companies}
           onClose={() => setShowModal(false)}
-          onSaved={() => { onDataChange(); setCompanies(getCompanies()) }}
+          onSaved={() => { onDataChange(); setTlVersion(v => v + 1) }}
+        />
+      )}
+
+      {prefilledTimes && (
+        <ManualEntryModal companies={companies} prefilledTimes={prefilledTimes}
+          onClose={() => setPrefilledTimes(null)}
+          onSaved={() => { onDataChange(); setPrefilledTimes(null); setTlVersion(v => v + 1) }}
         />
       )}
     </div>

@@ -117,14 +117,76 @@ html, body {
   color: var(--accent);
 }
 
-.sidebar-timer-badge {
-  border: 1px solid;
+/* kept for backwards compat – new SAT banner replaces this */
+.sidebar-timer-badge { display: none; }
+
+/* ── Active timer banner (SAT) ───────────────────────────────── */
+.sat-banner {
+  width: 100%;
+  padding: 14px 14px 12px;
+  border: 2px solid;
   border-radius: var(--radius);
-  padding: 8px 10px;
+  background: var(--surface2);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
+  transition: background 0.15s, filter 0.15s;
+  position: relative;
+}
+
+.sat-banner:hover {
+  background: var(--border);
+  filter: brightness(1.05);
+}
+
+.sat-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 1.2s infinite;
+  box-shadow: 0 0 10px currentColor;
+  margin-bottom: 2px;
+}
+
+.sat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sat-company {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.sat-project {
   font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+.sat-elapsed {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text);
+  margin-top: 4px;
+  line-height: 1;
+}
+
+.sat-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.4px;
 }
 
 .sidebar-timer-dot {
@@ -655,7 +717,7 @@ html, body {
   top: 34px;
   left: 0;
   right: 0;
-  height: 100px;        /* matches taller block area */
+  height: 162px;
   background: color-mix(in srgb, var(--surface2) 60%, transparent);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -664,7 +726,7 @@ html, body {
 
 .timeline-track {
   position: relative;
-  height: 148px;        /* generous height */
+  height: 210px;        /* extra tall for good readability */
   min-width: 900px;
   padding: 0 2px;
 }
@@ -715,7 +777,7 @@ html, body {
 .tl-block {
   position: absolute;
   top: 36px;
-  height: 96px;
+  height: 156px;
   border-radius: 7px;
   min-width: 3px;
   opacity: 0.92;
@@ -745,22 +807,101 @@ html, body {
 }
 
 .tl-block-emoji {
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1;
   flex-shrink: 0;
   pointer-events: none;
 }
 
+/* Block info: company + project stacked */
+.tl-block-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tl-block-company {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7), 0 0 2px rgba(0,0,0,0.5);
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+
+.tl-block-project {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.6);
+  line-height: 1.2;
+}
+
+.tl-block-emoji-solo {
+  font-size: 26px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Label shown during move/resize */
 .tl-block-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  color: rgba(255,255,255,0.95);
+  color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
   letter-spacing: 0.3px;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+}
+
+.tl-block-label--time {
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.tl-block-label--narrow {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+/* ── Now indicator ── */
+.tl-now-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #ef4444;
+  transform: translateX(-50%);
+  z-index: 25;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(239,68,68,0.7), 0 0 2px rgba(239,68,68,0.5);
+}
+
+.tl-now-label {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(239,68,68,0.4);
+  letter-spacing: 0.5px;
 }
 
 /* ── Resize handles ── */
@@ -807,7 +948,7 @@ html, body {
 .tl-drag-preview {
   position: absolute;
   top: 36px;
-  height: 96px;
+  height: 156px;
   border-radius: 7px;
   background: var(--accent);
   opacity: 0.28;
