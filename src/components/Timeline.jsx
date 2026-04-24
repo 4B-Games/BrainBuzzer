@@ -22,11 +22,16 @@ function minsToLabel(m)              { const h=Math.floor(m/60); return `${Strin
 
 function buildTicks(vs, vh) {
   const startM = vs * 60, endM = startM + vh * 60, ticks = []
-  const firstM = Math.floor(startM / 10) * 10
-  for (let m = firstM; m <= endM; m += 10) {
+  const firstM = Math.floor(startM / 5) * 5   // 5-minute steps
+  for (let m = firstM; m <= endM; m += 5) {
     if (m < 0 || m > 24 * 60) continue
     const moh = m % 60
-    const type = moh === 0 ? 'hour' : moh === 30 ? 'medium' : 'small'
+    // Type hierarchy: hour > medium (30m) > quarter (15/45m) > small (10/20/40/50) > tiny (5/25/35/55)
+    const type =
+      moh === 0               ? 'hour'    :
+      moh === 30              ? 'medium'  :
+      moh === 15 || moh === 45 ? 'quarter' :
+      moh % 10 === 0          ? 'small'   : 'tiny'
     const pct  = ((m - startM) / (vh * 60)) * 100
     const h    = Math.floor(m / 60), hStr = String(h < 24 ? h : 0).padStart(2,'0')
     const label = type === 'hour' ? `${hStr}:00` : type === 'medium' ? `${hStr}:30` : null

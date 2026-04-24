@@ -4,11 +4,18 @@ import { uid } from '../utils/format.js'
 const KEYS = {
   users:   'bb_users',
   session: 'bb_session',
+  version: 'bb_users_v',
 }
 
+const USERS_VERSION = '2'   // bump when defaultUsers changes to force re-init
+
 function initUsers() {
-  if (!localStorage.getItem(KEYS.users)) {
+  const storedVersion = localStorage.getItem(KEYS.version)
+  if (!localStorage.getItem(KEYS.users) || storedVersion !== USERS_VERSION) {
     localStorage.setItem(KEYS.users, JSON.stringify(defaultUsers))
+    localStorage.setItem(KEYS.version, USERS_VERSION)
+    // Clear session so user must log in again with new credentials
+    localStorage.removeItem(KEYS.session)
   }
 }
 

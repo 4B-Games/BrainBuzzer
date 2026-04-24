@@ -1,17 +1,15 @@
 import { uid } from './format.js'
 
 export const defaultUsers = [
-  { id: 'user-admin', name: 'Admin', email: 'admin@brainbuzzer.de', password: 'admin123', role: 'admin' },
-  { id: 'user-1',  name: 'Anna Bauer',    email: 'anna@brainbuzzer.de',   password: 'pass123', role: 'user' },
-  { id: 'user-2',  name: 'Ben Schulz',    email: 'ben@brainbuzzer.de',    password: 'pass123', role: 'user' },
-  { id: 'user-3',  name: 'Clara Meier',   email: 'clara@brainbuzzer.de',  password: 'pass123', role: 'user' },
-  { id: 'user-4',  name: 'David König',   email: 'david@brainbuzzer.de',  password: 'pass123', role: 'user' },
-  { id: 'user-5',  name: 'Eva Hoffmann',  email: 'eva@brainbuzzer.de',    password: 'pass123', role: 'user' },
-  { id: 'user-6',  name: 'Frank Weber',   email: 'frank@brainbuzzer.de',  password: 'pass123', role: 'user' },
-  { id: 'user-7',  name: 'Greta Fischer', email: 'greta@brainbuzzer.de',  password: 'pass123', role: 'user' },
-  { id: 'user-8',  name: 'Hans Braun',    email: 'hans@brainbuzzer.de',   password: 'pass123', role: 'user' },
-  { id: 'user-9',  name: 'Irene Koch',    email: 'irene@brainbuzzer.de',  password: 'pass123', role: 'user' },
-  { id: 'user-10', name: 'Jonas Richter', email: 'jonas@brainbuzzer.de',  password: 'pass123', role: 'user' },
+  { id: 'user-admin', name: 'Admin',                  email: 'admin@brainbuzzer.de',    password: 'admin123', role: 'admin' },
+  { id: 'user-1',     name: 'Roberto Versino',         email: 'roberto@brainbuzzer.de',  password: 'pass123',  role: 'user'  },
+  { id: 'user-2',     name: 'Berenice Wolanski',       email: 'berenice@brainbuzzer.de', password: 'admin123', role: 'admin' },
+  { id: 'user-3',     name: 'Eric Wolanski',           email: 'eric@brainbuzzer.de',     password: 'admin123', role: 'admin' },
+  { id: 'user-4',     name: 'Fabian Lackhoff',         email: 'fabian@brainbuzzer.de',   password: 'pass123',  role: 'user'  },
+  { id: 'user-5',     name: 'Jens Gescher',            email: 'jens@brainbuzzer.de',     password: 'admin123', role: 'admin' },
+  { id: 'user-6',     name: 'Julia Sieberg',           email: 'julia@brainbuzzer.de',    password: 'pass123',  role: 'user'  },
+  { id: 'user-7',     name: 'Julian Michler',          email: 'julian@brainbuzzer.de',   password: 'pass123',  role: 'user'  },
+  { id: 'user-8',     name: 'Samantha De Luca-Thrun',  email: 'samantha@brainbuzzer.de', password: 'pass123',  role: 'user'  },
 ]
 
 export const defaultCompanies = [
