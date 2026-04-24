@@ -2564,35 +2564,42 @@ html, body {
   color: var(--text-dim);
 }
 
-/* ── Timeline trash zone ─────────────────────────────────────── */
-.tl-trash-zone {
-  margin-top: 8px;
-  padding: 12px 20px;
-  border: 2px dashed var(--danger);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--danger) 8%, transparent);
+/* ── Timeline zoom controls ──────────────────────────────────── */
+.tl-zoom {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.tl-zoom-btn {
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  color: var(--danger);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  transition: background 0.15s, border-color 0.15s;
-  pointer-events: none;  /* mouse tracking done via JS */
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.tl-trash-zone--hot {
-  background: color-mix(in srgb, var(--danger) 22%, transparent);
-  border-style: solid;
+.tl-zoom-btn:hover:not(:disabled) {
+  background: var(--border);
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
-/* Block turns semi-transparent + red tint when dragged to trash */
-.tl-block--to-trash {
-  opacity: 0.55;
-  filter: saturate(0.3) brightness(0.7) sepia(1) hue-rotate(-20deg);
-  transition: none;
+.tl-zoom-btn:disabled { opacity: 0.35; cursor: default; }
+
+.tl-zoom-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  min-width: 26px;
+  text-align: center;
 }
 
 /* ── Timeline block inline editor ────────────────────────────── */
@@ -2687,6 +2694,45 @@ html, body {
 }
 
 .tl-be-cancel:hover { background: var(--border); }
+
+/* Trash icon button (left side of actions row) */
+.tl-be-trash {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.tl-be-trash:hover { color: var(--danger); border-color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+
+/* Confirm delete button */
+.tl-be-delete-confirm {
+  flex: 1;
+  padding: 8px;
+  background: var(--danger);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s;
+}
+
+.tl-be-delete-confirm:hover { background: color-mix(in srgb, var(--danger) 80%, black); }
 
 .tl-be-save {
   flex: 1;

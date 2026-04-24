@@ -1,32 +1,33 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Trash2, ZoomIn, ZoomOut } from 'lucide-react'
 import { fmtTime, fmtDurationShort } from '../utils/format.js'
 
-const VIEWPORT_HOURS = 6
-const MAX_VIEW_START = 24 - VIEWPORT_HOURS
+const ZOOM_OPTIONS  = [2, 3, 4, 6, 8, 12]   // viewport hours options
+const ZOOM_DEFAULT  = 6
 const MIN_BLOCK_MINS = 5
+const LS_ZOOM_KEY   = 'bb_tl_zoom'
 
-// ── Helpers ───────────────────────────────────────────────────────
+// ── Helpers (accept vh = viewport hours) ─────────────────────────
 
-function timeToViewPct(iso, vs) {
+function timeToViewPct(iso, vs, vh) {
   const d = new Date(iso)
-  return ((d.getHours() * 60 + d.getMinutes() - vs * 60) / (VIEWPORT_HOURS * 60)) * 100
+  return ((d.getHours() * 60 + d.getMinutes() - vs * 60) / (vh * 60)) * 100
 }
-function durToViewPct(sec)   { return (sec / (VIEWPORT_HOURS * 3600)) * 100 }
-function relPct(e, el)       { const r = el.getBoundingClientRect(); return Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100)) }
-function pctToMidMins(p, vs) { return vs * 60 + (p / 100) * VIEWPORT_HOURS * 60 }
-function snap5(m)             { return Math.round(m / 5) * 5 }
-function midMinsToDate(m, b)  { const c=Math.max(0,Math.min(24*60,m)), d=new Date(b); d.setHours(Math.floor(c/60),c%60,0,0); return d }
-function minsToLabel(m)       { const h=Math.floor(m/60); return `${String(h<24?h:0).padStart(2,'0')}:${String(m%60).padStart(2,'0')}` }
+function durToViewPct(sec, vh)       { return (sec / (vh * 3600)) * 100 }
+function relPct(e, el)               { const r = el.getBoundingClientRect(); return Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100)) }
+function pctToMidMins(p, vs, vh)     { return vs * 60 + (p / 100) * vh * 60 }
+function snap5(m)                    { return Math.round(m / 5) * 5 }
+function midMinsToDate(m, b)         { const c=Math.max(0,Math.min(24*60,m)), d=new Date(b); d.setHours(Math.floor(c/60),c%60,0,0); return d }
+function minsToLabel(m)              { const h=Math.floor(m/60); return `${String(h<24?h:0).padStart(2,'0')}:${String(m%60).padStart(2,'0')}` }
 
-function buildTicks(vs) {
-  const startM = vs * 60, endM = startM + VIEWPORT_HOURS * 60, ticks = []
+function buildTicks(vs, vh) {
+  const startM = vs * 60, endM = startM + vh * 60, ticks = []
   const firstM = Math.floor(startM / 10) * 10
   for (let m = firstM; m <= endM; m += 10) {
     if (m < 0 || m > 24 * 60) continue
     const moh = m % 60
     const type = moh === 0 ? 'hour' : moh === 30 ? 'medium' : 'small'
-    const pct  = ((m - startM) / (VIEWPORT_HOURS * 60)) * 100
+    const pct  = ((m - startM) / (vh * 60)) * 100
     const h    = Math.floor(m / 60), hStr = String(h < 24 ? h : 0).padStart(2,'0')
     const label = type === 'hour' ? `${hStr}:00` : type === 'medium' ? `${hStr}:30` : null
     ticks.push({ pct, type, label })
@@ -36,9 +37,10 @@ function buildTicks(vs) {
 
 // ── Block editor sub-component ────────────────────────────────────
 
-function BlockEditor({ entry, companies, pos, onSave, onClose }) {
+function BlockEditor({ entry, companies, pos, onSave, onDelete, onClose }) {
   const [companyId, setCompanyId] = useState(entry.companyId ?? '')
   const [projectId, setProjectId] = useState(entry.projectId ?? '')
+  const [confirmDel, setConfirmDel] = useState(false)
   const ref = useRef(null)
 
   useEffect(() => {
@@ -48,6 +50,26 @@ function BlockEditor({ entry, companies, pos, onSave, onClose }) {
   }, [onClose])
 
   const selectedCo = companies.find(c => c.id === companyId)
+
+  if (confirmDel) {
+    return (
+      <div ref={ref} className="tl-block-editor" style={{ top: pos.top, left: pos.left }}>
+        <div className="tl-be-header">
+          <span>Eintrag löschen?</span>
+          <button className="tl-be-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="tl-be-body" style={{ color: 'var(--text-dim)', fontSize: 13 }}>
+          Diese Aktion kann nicht rückgängig gemacht werden.
+        </div>
+        <div className="tl-be-actions">
+          <button className="tl-be-cancel" onClick={() => setConfirmDel(false)}>Abbrechen</button>
+          <button className="tl-be-delete-confirm" onClick={() => { onDelete(entry.id); onClose() }}>
+            <Trash2 size={13} /> Löschen
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div ref={ref} className="tl-block-editor" style={{ top: pos.top, left: pos.left }}>
@@ -65,8 +87,7 @@ function BlockEditor({ entry, companies, pos, onSave, onClose }) {
         {selectedCo?.projects.length > 0 && (
           <>
             <label className="tl-be-label">Projekt</label>
-            <select className="tl-be-select" value={projectId}
-              onChange={e => setProjectId(e.target.value)}>
+            <select className="tl-be-select" value={projectId} onChange={e => setProjectId(e.target.value)}>
               <option value="">— kein Projekt —</option>
               {selectedCo.projects.map(p => (
                 <option key={p.id} value={p.id}>{p.emoji ? p.emoji + ' ' : ''}{p.name}</option>
@@ -76,6 +97,9 @@ function BlockEditor({ entry, companies, pos, onSave, onClose }) {
         )}
       </div>
       <div className="tl-be-actions">
+        <button className="tl-be-trash" onClick={() => setConfirmDel(true)} title="Löschen">
+          <Trash2 size={14} />
+        </button>
         <button className="tl-be-cancel" onClick={onClose}>Abbrechen</button>
         <button className="tl-be-save" onClick={() => {
           onSave(entry.id, { companyId: companyId || null, projectId: projectId || null })
@@ -89,42 +113,59 @@ function BlockEditor({ entry, companies, pos, onSave, onClose }) {
 // ── Main component ─────────────────────────────────────────────────
 
 export default function Timeline({ entries, companies, onRangeSelect, onBlockMove, onBlockDelete, onBlockUpdate, date }) {
-  const trackRef     = useRef(null)
-  const movingRef    = useRef(null)
-  const resizingRef  = useRef(null)
-  const trashRef     = useRef(null)
-  const overTrashRef = useRef(false)
+  const trackRef    = useRef(null)
+  const movingRef   = useRef(null)
+  const resizingRef = useRef(null)
 
-  const defaultStart = () => {
-    const h = new Date().getHours()
-    return Math.max(0, Math.min(MAX_VIEW_START, Math.round((h - VIEWPORT_HOURS / 2) * 2) / 2))
+  // ── Zoom (persisted to localStorage) ────────────────────────────
+  const [viewportHours, setViewportHoursState] = useState(() => {
+    const saved = parseInt(localStorage.getItem(LS_ZOOM_KEY))
+    return ZOOM_OPTIONS.includes(saved) ? saved : ZOOM_DEFAULT
+  })
+
+  function setZoom(newVH) {
+    const center   = viewStart + viewportHours / 2
+    const maxStart = 24 - newVH
+    const newStart = Math.max(0, Math.min(maxStart, center - newVH / 2))
+    setViewStart(Math.round(newStart * 4) / 4)
+    setViewportHoursState(newVH)
+    localStorage.setItem(LS_ZOOM_KEY, String(newVH))
   }
 
-  const [viewStart,    setViewStart]    = useState(defaultStart)
+  const zoomIdx    = ZOOM_OPTIONS.indexOf(viewportHours)
+  const canZoomIn  = zoomIdx > 0
+  const canZoomOut = zoomIdx < ZOOM_OPTIONS.length - 1
+
+  // ── View position ────────────────────────────────────────────────
+  const [viewStart, setViewStart] = useState(() => {
+    const h = new Date().getHours()
+    return Math.max(0, Math.min(24 - viewportHours, Math.round((h - viewportHours / 2) * 2) / 2))
+  })
+
   const [dragRange,    setDragRange]    = useState(null)
   const [movingBlock,  setMovingBlock]  = useState(null)
   const [resizingBlock,setResizingBlock]= useState(null)
-  const [overTrash,    setOverTrash]    = useState(false)
   const [nowTime,      setNowTime]      = useState(() => new Date())
   const [blockEditor,  setBlockEditor]  = useState(null)
 
   useEffect(() => { const t=setInterval(()=>setNowTime(new Date()),60_000); return ()=>clearInterval(t) }, [])
 
-  const companyMap = Object.fromEntries(companies.map(c => [c.id, c]))
-  const baseDate   = date ?? new Date()
-  const ticks      = useMemo(() => buildTicks(viewStart), [viewStart])
+  const companyMap  = Object.fromEntries(companies.map(c => [c.id, c]))
+  const baseDate    = date ?? new Date()
+  const maxViewStart = 24 - viewportHours
+  const ticks       = useMemo(() => buildTicks(viewStart, viewportHours), [viewStart, viewportHours])
 
-  const viewEndH   = viewStart + VIEWPORT_HOURS
-  const endHLabel  = viewEndH >= 24 ? '24:00' : `${String(Math.floor(viewEndH)).padStart(2,'0')}:00`
-  const rangeLabel = `${String(Math.floor(viewStart)).padStart(2,'0')}:00 – ${endHLabel}`
+  const viewEndH    = viewStart + viewportHours
+  const endHLabel   = viewEndH >= 24 ? '24:00' : `${String(Math.floor(viewEndH)).padStart(2,'0')}:00`
+  const rangeLabel  = `${String(Math.floor(viewStart)).padStart(2,'0')}:00 – ${endHLabel}`
 
-  const nowMins    = nowTime.getHours() * 60 + nowTime.getMinutes()
-  const nowPct     = ((nowMins - viewStart * 60) / (VIEWPORT_HOURS * 60)) * 100
-  const nowVisible = nowPct >= 0 && nowPct <= 100
+  const nowMins     = nowTime.getHours() * 60 + nowTime.getMinutes()
+  const nowPct      = ((nowMins - viewStart * 60) / (viewportHours * 60)) * 100
+  const nowVisible  = nowPct >= 0 && nowPct <= 100
 
   function centerOnNow() {
     const h = new Date().getHours() + new Date().getMinutes() / 60
-    setViewStart(Math.max(0, Math.min(MAX_VIEW_START, Math.round((h - VIEWPORT_HOURS / 2) * 4) / 4)))
+    setViewStart(Math.max(0, Math.min(maxViewStart, Math.round((h - viewportHours / 2) * 4) / 4)))
   }
 
   // ── Create-by-drag ─────────────────────────────────────────────
@@ -139,23 +180,23 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
     function onUp(ev) {
       window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp)
       const endPct = relPct(ev, trackRef.current); setDragRange(null)
-      const sM = snap5(pctToMidMins(Math.min(startPct,endPct),viewStart))
-      const eM = snap5(pctToMidMins(Math.max(startPct,endPct),viewStart))
+      const sM = snap5(pctToMidMins(Math.min(startPct,endPct),viewStart,viewportHours))
+      const eM = snap5(pctToMidMins(Math.max(startPct,endPct),viewStart,viewportHours))
       if (eM <= sM) return
       onRangeSelect({ start: midMinsToDate(sM,baseDate).toISOString(), end: midMinsToDate(eM,baseDate).toISOString() })
     }
     window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp)
   }
 
-  // ── Move block + click-to-edit + drag-to-trash ─────────────────
+  // ── Move block + click-to-edit ─────────────────────────────────
 
   function handleBlockMouseDown(e, entry) {
     if (!onBlockMove && !onBlockUpdate) return
     if (e.target.closest('.tl-block-handle')) return
     e.preventDefault(); e.stopPropagation()
 
-    const tw  = trackRef.current.getBoundingClientRect().width
-    const sd  = new Date(entry.start)
+    const tw   = trackRef.current.getBoundingClientRect().width
+    const sd   = new Date(entry.start)
     const orig = sd.getHours() * 60 + sd.getMinutes()
     const dur  = Math.round(entry.duration / 60)
     const mb   = { entryId: entry.id, origMins: orig, durMins: dur, deltaX: 0, startX: e.clientX, startY: e.clientY, trackWidth: tw, hasMoved: false }
@@ -167,25 +208,17 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
       const hasMoved = curr.hasMoved || Math.abs(dx) > 6 || Math.abs(dy) > 6
       const updated = { ...curr, deltaX: dx, hasMoved }
       movingRef.current = updated; setMovingBlock({ ...updated })
-
-      // Trash detection
-      if (hasMoved && trashRef.current) {
-        const r = trashRef.current.getBoundingClientRect()
-        const over = ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom
-        overTrashRef.current = over; setOverTrash(over)
-      }
     }
 
     function onUp(ev) {
       window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp)
       const mb2 = movingRef.current
-      overTrashRef.current = false; setOverTrash(false)
       movingRef.current = null; setMovingBlock(null)
       if (!mb2) return
 
-      if (!mb2.hasMoved && onBlockUpdate) {
+      if (!mb2.hasMoved) {
         // CLICK → open inline editor
-        const edW = 270, edH = 200
+        const edW = 270, edH = 220
         let top  = ev.clientY + 12
         let left = ev.clientX - edW / 2
         if (top + edH > window.innerHeight - 8) top = ev.clientY - edH - 12
@@ -194,12 +227,8 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
         return
       }
 
-      if (mb2.hasMoved && overTrashRef.current && onBlockDelete) {
-        onBlockDelete(mb2.entryId); return
-      }
-
       if (mb2.hasMoved && onBlockMove) {
-        const dM = snap5((mb2.deltaX / mb2.trackWidth) * VIEWPORT_HOURS * 60)
+        const dM = snap5((mb2.deltaX / mb2.trackWidth) * viewportHours * 60)
         const s  = Math.max(0, Math.min(24 * 60 - mb2.durMins, mb2.origMins + dM))
         onBlockMove(mb2.entryId, midMinsToDate(s,baseDate).toISOString(), midMinsToDate(s+mb2.durMins,baseDate).toISOString())
       }
@@ -213,8 +242,8 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
   function handleResizeMouseDown(e, entry, side) {
     if (!onBlockMove) return
     e.preventDefault(); e.stopPropagation()
-    const tw  = trackRef.current.getBoundingClientRect().width
-    const sd  = new Date(entry.start), ed = new Date(entry.end)
+    const tw = trackRef.current.getBoundingClientRect().width
+    const sd = new Date(entry.start), ed = new Date(entry.end)
     const origS = sd.getHours() * 60 + sd.getMinutes()
     const origE = ed.getHours() * 60 + ed.getMinutes()
     const rb = { entryId: entry.id, side, origStartM: origS, origEndM: origE, deltaX: 0, startX: e.clientX, trackWidth: tw }
@@ -227,7 +256,7 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
       window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp)
       const rb2 = resizingRef.current; resizingRef.current = null; setResizingBlock(null)
       if (!rb2) return
-      const dM = snap5((rb2.deltaX / rb2.trackWidth) * VIEWPORT_HOURS * 60)
+      const dM = snap5((rb2.deltaX / rb2.trackWidth) * viewportHours * 60)
       let s, en
       if (rb2.side === 'left') { s = Math.max(0, Math.min(rb2.origEndM-MIN_BLOCK_MINS, rb2.origStartM+dM)); en = rb2.origEndM }
       else { s = rb2.origStartM; en = Math.max(rb2.origStartM+MIN_BLOCK_MINS, Math.min(24*60, rb2.origEndM+dM)) }
@@ -240,24 +269,24 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
 
   function getVisualPos(entry) {
     if (movingBlock?.entryId === entry.id) {
-      const dM = snap5((movingBlock.deltaX / movingBlock.trackWidth) * VIEWPORT_HOURS * 60)
+      const dM = snap5((movingBlock.deltaX / movingBlock.trackWidth) * viewportHours * 60)
       const s  = Math.max(0, Math.min(24*60-movingBlock.durMins, movingBlock.origMins+dM))
-      return { leftPct: ((s-viewStart*60)/(VIEWPORT_HOURS*60))*100, widthPct: (movingBlock.durMins/(VIEWPORT_HOURS*60))*100, startLabel: minsToLabel(s), endLabel: minsToLabel(s+movingBlock.durMins), type: 'move' }
+      return { leftPct: ((s-viewStart*60)/(viewportHours*60))*100, widthPct: (movingBlock.durMins/(viewportHours*60))*100, startLabel: minsToLabel(s), endLabel: minsToLabel(s+movingBlock.durMins), type: 'move' }
     }
     if (resizingBlock?.entryId === entry.id) {
-      const rb = resizingBlock, dM = snap5((rb.deltaX/rb.trackWidth)*VIEWPORT_HOURS*60)
+      const rb = resizingBlock, dM = snap5((rb.deltaX/rb.trackWidth)*viewportHours*60)
       let s, en
       if (rb.side==='left') { s=Math.max(0,Math.min(rb.origEndM-MIN_BLOCK_MINS,rb.origStartM+dM)); en=rb.origEndM }
       else { s=rb.origStartM; en=Math.max(rb.origStartM+MIN_BLOCK_MINS,Math.min(24*60,rb.origEndM+dM)) }
-      return { leftPct: ((s-viewStart*60)/(VIEWPORT_HOURS*60))*100, widthPct: ((en-s)/(VIEWPORT_HOURS*60))*100, startLabel: minsToLabel(s), endLabel: minsToLabel(en), type: 'resize' }
+      return { leftPct: ((s-viewStart*60)/(viewportHours*60))*100, widthPct: ((en-s)/(viewportHours*60))*100, startLabel: minsToLabel(s), endLabel: minsToLabel(en), type: 'resize' }
     }
     return null
   }
 
   const drMinPct = dragRange ? Math.min(dragRange.startPct, dragRange.currentPct) : 0
   const drMaxPct = dragRange ? Math.max(dragRange.startPct, dragRange.currentPct) : 0
-  const drStartM = dragRange ? snap5(pctToMidMins(drMinPct,viewStart)) : 0
-  const drEndM   = dragRange ? snap5(pctToMidMins(drMaxPct,viewStart)) : 0
+  const drStartM = dragRange ? snap5(pctToMidMins(drMinPct,viewStart,viewportHours)) : 0
+  const drEndM   = dragRange ? snap5(pctToMidMins(drMaxPct,viewStart,viewportHours)) : 0
 
   return (
     <div className="timeline">
@@ -287,10 +316,9 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
             const color   = company?.color ?? '#6366f1'
             const visual  = getVisualPos(entry)
             const isActive = !!visual
-            const isDraggingToTrash = isActive && visual.type === 'move' && overTrash
 
-            const leftPct  = visual ? visual.leftPct  : timeToViewPct(entry.start, viewStart)
-            const widthPct = visual ? visual.widthPct : durToViewPct(entry.duration)
+            const leftPct  = visual ? visual.leftPct  : timeToViewPct(entry.start, viewStart, viewportHours)
+            const widthPct = visual ? visual.widthPct : durToViewPct(entry.duration, viewportHours)
 
             return (
               <div
@@ -298,12 +326,12 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
                 className={[
                   'tl-block',
                   (onBlockMove || onBlockUpdate) ? 'tl-block--draggable' : '',
-                  visual?.type === 'move'   ? (isDraggingToTrash ? 'tl-block--to-trash' : 'tl-block--moving') : '',
+                  visual?.type === 'move'   ? 'tl-block--moving'   : '',
                   visual?.type === 'resize' ? 'tl-block--resizing' : '',
                 ].filter(Boolean).join(' ')}
                 style={{ left: `${leftPct}%`, width: `${Math.max(widthPct,0.25)}%`, background: color }}
                 onMouseDown={e => handleBlockMouseDown(e, entry)}
-                title="Klicken → bearbeiten · Ziehen → verschieben · Mülleimer → löschen"
+                title="Klicken → bearbeiten / verschieben"
               >
                 {onBlockMove && <div className="tl-block-handle tl-block-handle--left"  onMouseDown={e => handleResizeMouseDown(e,entry,'left')} />}
 
@@ -336,19 +364,20 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
         </div>
       </div>
 
-      {/* Trash drop zone – appears while dragging a block */}
-      {movingBlock && (
-        <div ref={trashRef} className={`tl-trash-zone${overTrash ? ' tl-trash-zone--hot' : ''}`}>
-          <Trash2 size={20} />
-          <span>Hier loslassen zum Löschen</span>
-        </div>
-      )}
-
+      {/* Controls: zoom + position slider */}
       <div className="tl-slider-row">
+        {/* Zoom */}
+        <div className="tl-zoom">
+          <button className="tl-zoom-btn" disabled={!canZoomIn}  onClick={() => setZoom(ZOOM_OPTIONS[zoomIdx - 1])} title="Reinzoomen"><ZoomIn  size={15}/></button>
+          <span className="tl-zoom-label">{viewportHours}h</span>
+          <button className="tl-zoom-btn" disabled={!canZoomOut} onClick={() => setZoom(ZOOM_OPTIONS[zoomIdx + 1])} title="Rauszoomen"><ZoomOut size={15}/></button>
+        </div>
+
         <span className="tl-slider-bound">00:00</span>
         <div className="tl-slider-wrap">
-          <input type="range" className="tl-slider" min={0} max={MAX_VIEW_START} step={0.25}
-            value={viewStart} onChange={e => setViewStart(parseFloat(e.target.value))} />
+          <input type="range" className="tl-slider" min={0} max={maxViewStart} step={0.25}
+            value={Math.min(viewStart, maxViewStart)}
+            onChange={e => setViewStart(parseFloat(e.target.value))} />
           <span className="tl-slider-range-label">{rangeLabel}</span>
         </div>
         <span className="tl-slider-bound">24:00</span>
@@ -362,6 +391,7 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
           companies={companies}
           pos={blockEditor.pos}
           onSave={(id, changes) => { onBlockUpdate?.(id, changes) }}
+          onDelete={(id) => { onBlockDelete?.(id) }}
           onClose={() => setBlockEditor(null)}
         />
       )}
