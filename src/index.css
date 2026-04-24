@@ -12,34 +12,38 @@
 
 /* ── Dark Theme (default) ──────────────────────────────────── */
 :root {
-  --bg:           #0f0f14;
-  --surface:      #16161e;
-  --surface2:     #1e1e2a;
-  --border:       #2a2a38;
-  --text:         #e2e2f0;
-  --text-dim:     #8888a8;
-  --accent:       #6366f1;
-  --accent-hover: #5254cc;
-  --danger:       #ef4444;
-  --success:      #10b981;
+  /* Hintergrund deutlich dunkler → Karten/Flächen heben sich ab */
+  --bg:           #09090f;
+  --surface:      #13131f;
+  --surface2:     #1c1c2d;
+  --border:       #36364e;   /* sichtbare Trennlinien */
+  /* Text: klares Weiß statt gräulichem Off-White */
+  --text:         #f4f4ff;
+  --text-dim:     #a0a0c8;   /* war #8888a8, jetzt +30% heller */
+  --accent:       #7577f5;   /* etwas heller für besseren Kontrast auf dunklem Grund */
+  --accent-hover: #6365e0;
+  --danger:       #f87171;   /* heller im Dunkeln */
+  --success:      #34d399;
   --radius:       8px;
   --sidebar-w:    250px;
-  --shadow:       0 4px 24px rgba(0,0,0,0.4);
+  --shadow:       0 4px 28px rgba(0,0,0,0.55);
 }
 
 /* ── Light Theme ───────────────────────────────────────────── */
 [data-theme="light"] {
-  --bg:           #f4f4f8;
+  /* Hintergrund satter grau → weiße Karten heben sich ab */
+  --bg:           #dcdce8;
   --surface:      #ffffff;
-  --surface2:     #ededf5;
-  --border:       #d8d8e8;
-  --text:         #1a1a2e;
-  --text-dim:     #66668a;
-  --accent:       #6366f1;
-  --accent-hover: #5254cc;
-  --danger:       #dc2626;
-  --success:      #059669;
-  --shadow:       0 4px 24px rgba(0,0,0,0.1);
+  --surface2:     #eeeef8;
+  --border:       #adadc8;   /* war #d8d8e8, jetzt deutlich dunkler */
+  /* Text: fast schwarz für maximalen Kontrast */
+  --text:         #0a0a18;
+  --text-dim:     #44446a;   /* war #66668a, jetzt 40% dunkler */
+  --accent:       #4547d6;   /* dunkler für besseren Kontrast auf Weiß */
+  --accent-hover: #3436b8;
+  --danger:       #c01c1c;   /* dunkler im Hellen */
+  --success:      #047857;
+  --shadow:       0 4px 20px rgba(0,0,0,0.18);
 }
 
 html, body {
@@ -49,7 +53,11 @@ html, body {
   color: var(--text);
   font-size: 15px;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.6;
+  /* Bessere Font-Darstellung für schärfere Schrift */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   transition: background 0.2s, color 0.2s;
 }
 
@@ -128,10 +136,11 @@ html, body {
   border-radius: var(--radius);
   border: none;
   background: transparent;
-  color: var(--text-dim);
+  color: color-mix(in srgb, var(--text) 75%, var(--text-dim));  /* heller als --text-dim */
   cursor: pointer;
   font-family: inherit;
   font-size: 13px;
+  font-weight: 600;
   transition: background 0.15s, color 0.15s;
   text-align: left;
   width: 100%;
@@ -385,8 +394,9 @@ html, body {
 .section-title {
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--text-dim);
+  letter-spacing: 1.4px;
+  color: var(--text);           /* war --text-dim, jetzt volle Sichtbarkeit */
+  opacity: 0.7;
   margin-bottom: 14px;
 }
 
@@ -1157,9 +1167,9 @@ html, body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius);
   transition: background 0.15s;
 }
@@ -1197,9 +1207,10 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
-  font-size: 12px;
-  color: var(--text-dim);
+  font-size: 13px;
+  color: color-mix(in srgb, var(--text) 80%, var(--text-dim));
   white-space: nowrap;
+  font-weight: 500;
 }
 
 .entry-duration { font-size: 13px; font-weight: 600; color: var(--text); }
@@ -1414,7 +1425,9 @@ html, body {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: var(--text-dim);
+  color: var(--text);
+  opacity: 0.75;
+  font-weight: 600;
 }
 
 .form-group input,
