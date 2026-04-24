@@ -6,7 +6,7 @@ import { uid } from './utils/format.js'
 import LoginView from './views/LoginView.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import TimerView from './views/TimerView.jsx'
-import TodayView from './views/TodayView.jsx'
+import EntriesView from './views/EntriesView.jsx'
 import ReportsView from './views/ReportsView.jsx'
 import SettingsView from './views/SettingsView.jsx'
 import TeamView from './views/TeamView.jsx'
@@ -120,7 +120,7 @@ export default function App() {
             activeEntry={activeEntry}
           />
         )}
-        {page === 'today' && <TodayView dataVersion={dataVersion} onDataChange={refresh} />}
+        {page === 'entries' && <EntriesView dataVersion={dataVersion} onDataChange={refresh} />}
         {page === 'reports' && <ReportsView dataVersion={dataVersion} currentUser={currentUser} />}
         {page === 'team' && currentUser?.role === 'admin' && <TeamView dataVersion={dataVersion} />}
         {page === 'settings' && <SettingsView onDataChange={refresh} currentUser={currentUser} />}

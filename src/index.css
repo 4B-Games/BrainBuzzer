@@ -762,15 +762,11 @@ html, body {
   background: color-mix(in srgb, var(--bg) 70%, var(--surface));
 }
 
-/* Block area fills top, tick area at bottom */
+/* Subtle background for the full track */
 .timeline-blocks-bg {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 38px;
-  background: color-mix(in srgb, var(--surface2) 60%, transparent);
-  border-bottom: 1px solid var(--border);
+  inset: 0;
+  background: color-mix(in srgb, var(--surface2) 30%, transparent);
   pointer-events: none;
 }
 
@@ -786,15 +782,15 @@ html, body {
   user-select: none;
 }
 
-/* ── Tick marks – AT BOTTOM ── */
+/* ── Tick marks – AT BOTTOM, lines span full block area ── */
 .tl-tick {
   position: absolute;
   bottom: 0;
-  height: 38px;
+  height: 100%;              /* span full track height */
   transform: translateX(-50%);
 }
 
-/* Lines anchored to the same baseline (17px from bottom = above labels) */
+/* All lines anchor at the same bottom baseline (above labels) */
 .tl-tick-line {
   position: absolute;
   bottom: 17px;
@@ -803,21 +799,25 @@ html, body {
   width: 1px;
 }
 
+/* Hour lines go ALL THE WAY to the top of the block area */
 .tl-tick--hour .tl-tick-line {
-  height: 20px;
-  background: color-mix(in srgb, var(--text-dim) 60%, transparent);
+  height: calc(100% - 17px);
+  background: color-mix(in srgb, var(--border) 70%, transparent);
 }
 
+/* Medium lines (30 min): medium height */
 .tl-tick--medium .tl-tick-line {
-  height: 10px;
-  background: var(--border);
+  height: 14px;
+  background: color-mix(in srgb, var(--border) 50%, transparent);
 }
 
+/* Small lines (10/20/40/50 min): short */
 .tl-tick--small .tl-tick-line {
-  height: 5px;
-  background: color-mix(in srgb, var(--border) 60%, transparent);
+  height: 6px;
+  background: color-mix(in srgb, var(--border) 35%, transparent);
 }
 
+/* Labels at the very bottom */
 .tl-tick-label {
   position: absolute;
   bottom: 0;
@@ -830,11 +830,12 @@ html, body {
   line-height: 16px;
 }
 
-/* ── Blocks – start from top ── */
+/* ── Blocks – start from top, sit above tick lines ── */
 .tl-block {
   position: absolute;
   top: 4px;
-  height: 174px;         /* 220 total - 38 tick area - 4 top margin - 4 bottom margin */
+  height: 174px;
+  z-index: 5;            /* above tick lines (z-index 1) */
   border-radius: 7px;
   min-width: 3px;
   opacity: 0.92;
@@ -2493,4 +2494,26 @@ html, body {
 /* calendar/clock icon color in light mode */
 [data-theme="light"] .ti-text-input::-webkit-calendar-picker-indicator {
   filter: invert(0.4);
+}
+
+/* ── Entries view (grouped by day) ───────────────────────────── */
+.entries-day-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.entries-day-label {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.entries-day-total {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
 }
