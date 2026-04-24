@@ -15,8 +15,11 @@ export default function Sidebar({ page, onNavigate, activeEntry, currentUser, on
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <Clock size={22} />
-        <span>Brain<strong>Buzzer</strong></span>
+        <div className="sidebar-logo-icon"><Clock size={32} /></div>
+        <div>
+          <div className="sidebar-logo-name">Brain<strong>Buzzer</strong></div>
+          <div className="sidebar-logo-tag">Zeiterfassung</div>
+        </div>
       </div>
 
       <nav className="sidebar-nav">

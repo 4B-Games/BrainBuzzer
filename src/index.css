@@ -78,15 +78,40 @@ html, body {
 .sidebar-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 8px 16px;
-  border-bottom: 1px solid var(--border);
-  font-size: 15px;
-  color: var(--text);
-  letter-spacing: -0.3px;
+  gap: 12px;
+  padding: 8px 8px 18px;
+  border-bottom: 2px solid var(--border);
 }
 
-.sidebar-logo strong { color: var(--accent); }
+.sidebar-logo-icon {
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 50%, transparent));
+}
+
+.sidebar-logo-name {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.sidebar-logo-name strong {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.sidebar-logo-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: var(--text-dim);
+  margin-top: 1px;
+  font-weight: 500;
+}
 
 .sidebar-nav {
   display: flex;
@@ -2525,3 +2550,143 @@ html, body {
   font-weight: 600;
   color: var(--text-dim);
 }
+
+/* ── Timeline trash zone ─────────────────────────────────────── */
+.tl-trash-zone {
+  margin-top: 8px;
+  padding: 12px 20px;
+  border: 2px dashed var(--danger);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: background 0.15s, border-color 0.15s;
+  pointer-events: none;  /* mouse tracking done via JS */
+}
+
+.tl-trash-zone--hot {
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  border-style: solid;
+}
+
+/* Block turns semi-transparent + red tint when dragged to trash */
+.tl-block--to-trash {
+  opacity: 0.55;
+  filter: saturate(0.3) brightness(0.7) sepia(1) hue-rotate(-20deg);
+  transition: none;
+}
+
+/* ── Timeline block inline editor ────────────────────────────── */
+.tl-block-editor {
+  position: fixed;
+  z-index: 500;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 270px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+[data-theme="light"] .tl-block-editor {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.tl-be-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tl-be-close {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.1s;
+}
+
+.tl-be-close:hover { color: var(--danger); }
+
+.tl-be-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tl-be-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.tl-be-select {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.tl-be-select:focus { border-color: var(--accent); }
+
+.tl-be-actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.tl-be-cancel {
+  flex: 1;
+  padding: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tl-be-cancel:hover { background: var(--border); }
+
+.tl-be-save {
+  flex: 1;
+  padding: 8px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tl-be-save:hover { background: var(--accent-hover); }

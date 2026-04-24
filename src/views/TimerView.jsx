@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Play, PlusCircle } from 'lucide-react'
-import { getCompanies, getEntries, updateEntry } from '../services/dataService.js'
+import { getCompanies, getEntries, updateEntry, deleteEntry } from '../services/dataService.js'
 import { fmtDuration, isToday } from '../utils/format.js'
 import TileGrid from '../components/TileGrid.jsx'
 import TimerBanner from '../components/TimerBanner.jsx'
@@ -62,6 +62,15 @@ export default function TimerView({
     setTlVersion(v => v + 1); onDataChange()
   }
 
+  function handleBlockDelete(entryId) {
+    deleteEntry(entryId); setTlVersion(v => v + 1); onDataChange()
+  }
+
+  function handleBlockUpdate(entryId, { companyId, projectId }) {
+    updateEntry(entryId, { companyId, projectId: projectId ?? null })
+    setTlVersion(v => v + 1); onDataChange()
+  }
+
   return (
     <>
       {/* ── Header + running banner ── */}
@@ -105,6 +114,8 @@ export default function TimerView({
           companies={companies}
           onRangeSelect={times => setPrefilledTimes(times)}
           onBlockMove={handleBlockMove}
+          onBlockDelete={handleBlockDelete}
+          onBlockUpdate={handleBlockUpdate}
           date={new Date()}
         />
       </div>

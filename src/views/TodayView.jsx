@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { getEntries, getCompanies, deleteEntry, updateEntry } from '../services/dataService.js'
+// updateEntry used for block move, delete, and inline company/project edits
 import { fmtDurationShort } from '../utils/format.js'
 import Timeline from '../components/Timeline.jsx'
 import EntryList from '../components/EntryList.jsx'
@@ -32,10 +33,14 @@ export default function TodayView({ dataVersion, onDataChange }) {
   function handleDelete(id) { deleteEntry(id); onDataChange() }
 
   function handleBlockMove(entryId, newStart, newEnd) {
-    updateEntry(entryId, {
-      start: newStart, end: newEnd,
-      duration: Math.floor((new Date(newEnd) - new Date(newStart)) / 1000),
-    })
+    updateEntry(entryId, { start: newStart, end: newEnd, duration: Math.floor((new Date(newEnd) - new Date(newStart)) / 1000) })
+    onDataChange()
+  }
+
+  function handleBlockDelete(entryId) { deleteEntry(entryId); onDataChange() }
+
+  function handleBlockUpdate(entryId, { companyId, projectId }) {
+    updateEntry(entryId, { companyId, projectId: projectId ?? null })
     onDataChange()
   }
 
@@ -57,6 +62,8 @@ export default function TodayView({ dataVersion, onDataChange }) {
           companies={companies}
           onRangeSelect={times => setPrefilledTimes(times)}
           onBlockMove={handleBlockMove}
+          onBlockDelete={handleBlockDelete}
+          onBlockUpdate={handleBlockUpdate}
           date={new Date()}
         />
       </div>
