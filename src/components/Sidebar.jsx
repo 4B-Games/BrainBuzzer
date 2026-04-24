@@ -1,7 +1,7 @@
-import { Timer, Calendar, BarChart2, Settings, Clock, LogOut, Sun, Moon, Users } from 'lucide-react'
+import { Timer, Calendar, BarChart2, Settings, Clock, LogOut, Sun, Moon, Users, Square } from 'lucide-react'
 import { fmtDuration } from '../utils/format.js'
 
-export default function Sidebar({ page, onNavigate, activeEntry, currentUser, onLogout, theme, onThemeToggle }) {
+export default function Sidebar({ page, onNavigate, activeEntry, currentUser, onLogout, onStopTimer, theme, onThemeToggle }) {
   const isAdmin = currentUser?.role === 'admin'
 
   const NAV = [
@@ -32,27 +32,32 @@ export default function Sidebar({ page, onNavigate, activeEntry, currentUser, on
         ))}
       </nav>
 
-      {/* Active timer banner – below Settings, clickable → Timer page */}
+      {/* Active timer banner – below nav, clickable → Timer, with Stop button */}
       {activeEntry && (
-        <button
-          className="sat-banner"
-          style={{ borderColor: activeEntry.companyColor }}
-          onClick={() => onNavigate('timer')}
-          title="Zum Timer"
-        >
-          <span className="sat-dot" style={{ background: activeEntry.companyColor }} />
-          <div className="sat-info">
-            <span className="sat-company">{activeEntry.companyName}</span>
-            {(activeEntry.projectName || activeEntry.projectEmoji) && (
-              <span className="sat-project">
-                {activeEntry.projectEmoji ? activeEntry.projectEmoji + ' ' : ''}
-                {activeEntry.projectName}
-              </span>
-            )}
-            <span className="sat-elapsed">{fmtDuration(activeEntry.elapsed)}</span>
+        <div className="sat-banner" style={{ borderColor: activeEntry.companyColor }}>
+          {/* Top row: pulsing dot + company + project */}
+          <div className="sat-body" onClick={() => onNavigate('timer')} role="button" tabIndex={0}
+            onKeyDown={e => e.key === 'Enter' && onNavigate('timer')}>
+            <span className="sat-dot" style={{ background: activeEntry.companyColor }} />
+            <div className="sat-info">
+              <span className="sat-company">{activeEntry.companyName}</span>
+              {(activeEntry.projectName || activeEntry.projectEmoji) && (
+                <span className="sat-project">
+                  {activeEntry.projectEmoji ? activeEntry.projectEmoji + ' ' : ''}
+                  {activeEntry.projectName}
+                </span>
+              )}
+              <span className="sat-elapsed">{fmtDuration(activeEntry.elapsed)}</span>
+            </div>
+            <span className="sat-nav-hint">→ Timer</span>
           </div>
-          <span className="sat-hint">→ Timer</span>
-        </button>
+
+          {/* Stop button */}
+          <button className="sat-stop-btn" onClick={onStopTimer}>
+            <Square size={13} fill="currentColor" />
+            Timer stoppen
+          </button>
+        </div>
       )}
 
       <div className="sidebar-bottom">

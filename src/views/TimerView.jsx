@@ -1,32 +1,17 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Play, PlusCircle } from 'lucide-react'
-import { useTimer } from '../hooks/useTimer.js'
-import { getCompanies, getEntries, addEntry, updateEntry } from '../services/dataService.js'
-import { getCurrentUser } from '../services/authService.js'
-import { uid, fmtDuration, isToday } from '../utils/format.js'
+import { getCompanies, getEntries, updateEntry } from '../services/dataService.js'
+import { fmtDuration, isToday } from '../utils/format.js'
 import TileGrid from '../components/TileGrid.jsx'
 import TimerBanner from '../components/TimerBanner.jsx'
 import ManualEntryModal from '../components/ManualEntryModal.jsx'
 import Timeline from '../components/Timeline.jsx'
 
-const TWO_HOURS_MS = 2 * 60 * 60 * 1000
-
-function requestNotificationPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission()
-  }
-}
-
-function sendReminder(companyName, projectName) {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return
-  new Notification('BrainBuzzer – Noch aktiv?', {
-    body: `Du arbeitest seit über 2 Stunden an: ${companyName}${projectName ? ' · ' + projectName : ''}`,
-    icon: '/favicon.svg',
-    tag: 'bb-reminder',
-  })
-}
-
-export default function TimerView({ onEntryStart, onEntryStop, onDataChange, activeEntry }) {
+export default function TimerView({
+  timerRunning, timerElapsed,
+  onTimerStart, onTimerStop,
+  onDataChange, activeEntry,
+}) {
   const [companies,      setCompanies]      = useState([])
   const [todayEntries,   setTodayEntries]   = useState([])
   const [selectedCompanyId, setSelectedCompanyId] = useState(null)
@@ -34,81 +19,46 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
   const [note,           setNote]           = useState('')
   const [showModal,      setShowModal]      = useState(false)
   const [prefilledTimes, setPrefilledTimes] = useState(null)
-  const [timerStart,     setTimerStart]     = useState(null)
-  const [tlVersion,      setTlVersion]      = useState(0)   // local refresh counter for timeline
-  const notifTimeout = useRef(null)
-
-  const { running, elapsed, start, stop, reset } = useTimer()
+  const [tlVersion,      setTlVersion]      = useState(0)
 
   function loadData() {
     const cos = getCompanies()
     setCompanies(cos)
-    const all = getEntries()
-    setTodayEntries(all.filter(e => isToday(e.start)).sort((a, b) => new Date(a.start) - new Date(b.start)))
+    setTodayEntries(
+      getEntries().filter(e => isToday(e.start)).sort((a, b) => new Date(a.start) - new Date(b.start))
+    )
   }
 
-  useEffect(() => {
-    loadData()
-    requestNotificationPermission()
-  }, [tlVersion])
+  useEffect(() => { loadData() }, [tlVersion])
 
-  useEffect(() => () => clearTimeout(notifTimeout.current), [])
+  // Clear note when timer stops
+  useEffect(() => { if (!timerRunning) setNote('') }, [timerRunning])
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId)
   const selectedProject = selectedCompany?.projects.find(p => p.id === selectedProjectId)
 
   function handleCompanySelect(id) {
-    if (running) return
+    if (timerRunning) return
     setSelectedCompanyId(id)
     setSelectedProjectId(null)
   }
 
   function handleProjectSelect(id) {
-    if (running) return
+    if (timerRunning) return
     setSelectedProjectId(id)
   }
 
   function handleStart() {
     if (!selectedCompanyId) return
-    const startIso = start()
-    setTimerStart(startIso)
-    onEntryStart({
+    onTimerStart({
       companyId:    selectedCompanyId,
+      projectId:    selectedProjectId ?? null,
       companyName:  selectedCompany?.name ?? '',
       companyColor: selectedCompany?.color ?? '#6366f1',
-      projectId:    selectedProjectId ?? null,
       projectName:  selectedProject?.name ?? '',
       projectEmoji: selectedProject?.emoji ?? '',
-      elapsed: 0,
+      note,
     })
-    clearTimeout(notifTimeout.current)
-    notifTimeout.current = setTimeout(
-      () => sendReminder(selectedCompany?.name ?? '', selectedProject?.name ?? ''),
-      TWO_HOURS_MS
-    )
-  }
-
-  useEffect(() => {
-    if (running && activeEntry) onEntryStart({ ...activeEntry, elapsed })
-  }, [elapsed]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  function handleStop() {
-    clearTimeout(notifTimeout.current)
-    const { end, duration } = stop()
-    const user = getCurrentUser()
-    addEntry({
-      id: uid(),
-      userId: user?.id ?? 'unknown',
-      companyId: selectedCompanyId,
-      projectId: selectedProjectId ?? null,
-      start: timerStart,
-      end, duration, note,
-    })
-    onEntryStop()
-    onDataChange()
-    setNote('')
-    reset()
-    setTlVersion(v => v + 1)
   }
 
   function handleBlockMove(entryId, newStart, newEnd) {
@@ -129,11 +79,14 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
         </button>
       </div>
 
-      {running && activeEntry && (
-        <TimerBanner activeEntry={{ ...activeEntry, elapsed }} onStop={handleStop} />
+      {timerRunning && activeEntry && (
+        <TimerBanner
+          activeEntry={{ ...activeEntry, elapsed: timerElapsed }}
+          onStop={onTimerStop}
+        />
       )}
 
-      {!running && (
+      {!timerRunning && (
         <>
           <section className="section">
             <h2 className="section-title">Unternehmen wählen</h2>
@@ -167,26 +120,28 @@ export default function TimerView({ onEntryStart, onEntryStop, onDataChange, act
         </>
       )}
 
-      {running && (
+      {timerRunning && (
         <div className="timer-running-display">
-          <div className="timer-clock" style={{ color: selectedCompany?.color }}>
-            {fmtDuration(elapsed)}
+          <div className="timer-clock" style={{ color: selectedCompany?.color ?? activeEntry?.companyColor }}>
+            {fmtDuration(timerElapsed)}
           </div>
           <p className="timer-running-label">
-            {selectedCompany?.name}
-            {selectedProject
-              ? ` · ${selectedProject.emoji ? selectedProject.emoji + ' ' : ''}${selectedProject.name}`
+            {activeEntry?.companyName}
+            {activeEntry?.projectName
+              ? ` · ${activeEntry.projectEmoji ? activeEntry.projectEmoji + ' ' : ''}${activeEntry.projectName}`
               : ''}
           </p>
+          <button className="btn-stop-large" onClick={onTimerStop}>
+            ■ &nbsp;Timer stoppen
+          </button>
         </div>
       )}
 
-      {/* ── Today's timeline ── */}
-      <section className="section">
+      {/* Today's timeline */}
+      <section className="section" style={{ marginBottom: 8 }}>
         <h2 className="section-title">Heutige Einträge – Zeitstrahl</h2>
       </section>
 
-      {/* Full-width timeline – same pattern as TodayView */}
       <div style={{ marginLeft: -40, marginRight: -40 }}>
         <Timeline
           entries={todayEntries}

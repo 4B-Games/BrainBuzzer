@@ -123,24 +123,31 @@ html, body {
 /* ── Active timer banner (SAT) ───────────────────────────────── */
 .sat-banner {
   width: 100%;
-  padding: 14px 14px 12px;
   border: 2px solid;
   border-radius: var(--radius);
   background: var(--surface2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Clickable info area */
+.sat-body {
+  padding: 14px 12px 10px;
   cursor: pointer;
-  text-align: left;
-  font-family: inherit;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  transition: background 0.15s, filter 0.15s;
+  transition: background 0.15s;
   position: relative;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
 }
 
-.sat-banner:hover {
-  background: var(--border);
-  filter: brightness(1.05);
-}
+.sat-body:hover { background: color-mix(in srgb, var(--border) 50%, transparent); }
 
 .sat-dot {
   width: 16px;
@@ -155,7 +162,7 @@ html, body {
 .sat-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .sat-company {
@@ -172,22 +179,44 @@ html, body {
 }
 
 .sat-elapsed {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   color: var(--text);
-  margin-top: 4px;
+  margin-top: 6px;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
-.sat-hint {
+.sat-nav-hint {
   position: absolute;
-  bottom: 8px;
+  top: 10px;
   right: 10px;
   font-size: 10px;
   color: var(--text-dim);
   letter-spacing: 0.4px;
 }
+
+/* Stop button at bottom of banner */
+.sat-stop-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--danger);
+  border: none;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s;
+  letter-spacing: 0.3px;
+}
+
+.sat-stop-btn:hover { background: #cc2222; }
 
 .sidebar-timer-dot {
   width: 8px; height: 8px;
@@ -545,6 +574,28 @@ html, body {
 }
 
 .btn-icon-danger:hover { color: var(--danger); }
+
+.btn-stop-large {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 36px;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 20px;
+  letter-spacing: 0.5px;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn-stop-large:hover { background: #cc2222; transform: scale(1.02); }
+.btn-stop-large:active { transform: scale(0.98); }
 
 .btn-stop {
   display: inline-flex;
