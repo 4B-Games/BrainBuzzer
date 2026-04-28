@@ -10,6 +10,7 @@ import EntriesView from './views/EntriesView.jsx'
 import ReportsView from './views/ReportsView.jsx'
 import SettingsView from './views/SettingsView.jsx'
 import TeamView from './views/TeamView.jsx'
+import ArchivView from './views/ArchivView.jsx'
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000
 
@@ -124,6 +125,7 @@ export default function App() {
         {page === 'reports' && <ReportsView dataVersion={dataVersion} currentUser={currentUser} />}
         {page === 'team' && currentUser?.role === 'admin' && <TeamView dataVersion={dataVersion} />}
         {page === 'settings' && <SettingsView onDataChange={refresh} currentUser={currentUser} />}
+        {page === 'archiv' && currentUser?.role === 'admin' && <ArchivView onDataChange={refresh} />}
       </main>
     </div>
   )

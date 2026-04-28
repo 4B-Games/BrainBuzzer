@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Play, PlusCircle } from 'lucide-react'
-import { getCompanies, getEntries, updateEntry, deleteEntry } from '../services/dataService.js'
+import { getActiveCompanies, getEntries, updateEntry, deleteEntry } from '../services/dataService.js'
 import { fmtDuration, isToday } from '../utils/format.js'
 import TileGrid from '../components/TileGrid.jsx'
 import TimerBanner from '../components/TimerBanner.jsx'
@@ -22,7 +22,7 @@ export default function TimerView({
   const [tlVersion,         setTlVersion]          = useState(0)
 
   function loadData() {
-    setCompanies(getCompanies())
+    setCompanies(getActiveCompanies())
     setTodayEntries(
       getEntries().filter(e => isToday(e.start)).sort((a, b) => new Date(a.start) - new Date(b.start))
     )

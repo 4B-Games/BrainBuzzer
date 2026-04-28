@@ -2761,3 +2761,179 @@ html, body {
 }
 
 .tl-be-save:hover { background: var(--accent-hover); }
+
+/* ── Archive button (Archive icon, not danger) ───────────────── */
+.btn-icon-archive {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px;
+  background: transparent;
+  color: var(--text-dim);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.btn-icon-archive:hover { color: var(--accent); }
+
+/* ── Archive view ────────────────────────────────────────────── */
+.archiv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 0;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.archiv-empty p { font-size: 16px; font-weight: 600; }
+.archiv-empty-sub { font-size: 13px; font-weight: 400 !important; opacity: 0.7; }
+
+.archiv-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.archiv-item {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.archiv-item-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.archiv-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.archiv-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.archiv-item-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.archiv-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.archiv-item-projects {
+  font-size: 12px;
+  color: var(--text-dim);
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.archiv-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.archiv-restore-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  border: 1.5px solid var(--success);
+  border-radius: var(--radius);
+  color: var(--success);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.archiv-restore-btn:hover {
+  background: color-mix(in srgb, var(--success) 25%, transparent);
+}
+
+.archiv-delete-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.archiv-delete-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+/* Confirm delete inline */
+.archiv-confirm {
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--danger) 30%, var(--border));
+}
+
+.archiv-confirm-text {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.archiv-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.archiv-delete-final-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: var(--danger);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.archiv-delete-final-btn:hover {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+}

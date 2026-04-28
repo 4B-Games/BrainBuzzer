@@ -1,4 +1,4 @@
-import { Timer, List, BarChart2, Settings, Clock, LogOut, Sun, Moon, Users, Square } from 'lucide-react'
+import { Timer, List, BarChart2, Settings, Clock, LogOut, Sun, Moon, Users, Square, Archive } from 'lucide-react'
 import { fmtDuration } from '../utils/format.js'
 
 export default function Sidebar({ page, onNavigate, activeEntry, currentUser, onLogout, onStopTimer, theme, onThemeToggle }) {
@@ -8,8 +8,9 @@ export default function Sidebar({ page, onNavigate, activeEntry, currentUser, on
     { id: 'timer',   label: 'Timer',      Icon: Timer },
     { id: 'entries', label: 'Einträge',   Icon: List },
     { id: 'reports',  label: 'Berichte',       Icon: BarChart2 },
-    ...(isAdmin ? [{ id: 'team', label: 'Team', Icon: Users }] : []),
-    { id: 'settings', label: 'Einstellungen',  Icon: Settings },
+    ...(isAdmin ? [{ id: 'team',   label: 'Team',    Icon: Users }] : []),
+    { id: 'settings', label: 'Einstellungen', Icon: Settings },
+    ...(isAdmin ? [{ id: 'archiv', label: 'Archiv',  Icon: Archive }] : []),
   ]
 
   return (

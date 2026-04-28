@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Download, ChevronDown, Users } from 'lucide-react'
-import { getEntries, getAllEntries, getCompanies, deleteEntry } from '../services/dataService.js'
+import { getEntries, getAllEntries, getCompanies, getActiveCompanies, deleteEntry } from '../services/dataService.js'
 import { getUsers } from '../services/authService.js'
 import { fmtDate, fmtTime, fmtDurationShort, fmtDateInput } from '../utils/format.js'
 import BarChart from '../components/BarChart.jsx'
@@ -110,7 +110,7 @@ export default function ReportsView({ dataVersion, currentUser }) {
 
   useEffect(() => {
     setEntries(isAdmin ? getAllEntries() : getEntries())
-    setCompanies(getCompanies())
+    setCompanies(getCompanies())              // all (incl. archived) for display
   }, [dataVersion, isAdmin])
 
   // Reset project filter when company changes

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { getEntries, getCompanies, deleteEntry, updateEntry } from '../services/dataService.js'
+import { getEntries, getCompanies, getActiveCompanies, deleteEntry, updateEntry } from '../services/dataService.js'
 // updateEntry used for block move, delete, and inline company/project edits
 import { fmtDurationShort } from '../utils/format.js'
 import Timeline from '../components/Timeline.jsx'
@@ -13,14 +13,16 @@ function isToday(isoString) {
 }
 
 export default function TodayView({ dataVersion, onDataChange }) {
-  const [entries,        setEntries]        = useState([])
-  const [companies,      setCompanies]      = useState([])
-  const [prefilledTimes, setPrefilledTimes] = useState(null)
-  const [editingEntry,   setEditingEntry]   = useState(null)
+  const [entries,          setEntries]          = useState([])
+  const [companies,        setCompanies]        = useState([])   // all (incl. archived) – for block display
+  const [activeCompanies,  setActiveCompanies]  = useState([])   // non-archived – for modals
+  const [prefilledTimes,   setPrefilledTimes]   = useState(null)
+  const [editingEntry,     setEditingEntry]     = useState(null)
 
   useEffect(() => {
     setEntries(getEntries())
     setCompanies(getCompanies())
+    setActiveCompanies(getActiveCompanies())
   }, [dataVersion])
 
   const todayEntries = useMemo(
@@ -82,13 +84,13 @@ export default function TodayView({ dataVersion, onDataChange }) {
       </div>
 
       {prefilledTimes && (
-        <ManualEntryModal companies={companies} prefilledTimes={prefilledTimes}
+        <ManualEntryModal companies={activeCompanies} prefilledTimes={prefilledTimes}
           onClose={() => setPrefilledTimes(null)}
           onSaved={() => { onDataChange(); setPrefilledTimes(null) }} />
       )}
 
       {editingEntry && (
-        <EditEntryModal entry={editingEntry} companies={companies} isAdmin={false}
+        <EditEntryModal entry={editingEntry} companies={activeCompanies} isAdmin={false}
           onClose={() => setEditingEntry(null)}
           onSaved={() => { onDataChange(); setEditingEntry(null) }} />
       )}

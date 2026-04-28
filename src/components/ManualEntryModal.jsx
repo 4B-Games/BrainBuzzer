@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { uid, fmtDateInput, fmtTimeInput } from '../utils/format.js'
-import { addEntry } from '../services/dataService.js'
+import { addEntry, getActiveCompanies } from '../services/dataService.js'
 import { getCurrentUser } from '../services/authService.js'
 import TimeInput from './TimeInput.jsx'
 
