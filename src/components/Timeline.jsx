@@ -153,7 +153,7 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
   const [nowTime,      setNowTime]      = useState(() => new Date())
   const [blockEditor,  setBlockEditor]  = useState(null)
 
-  useEffect(() => { const t=setInterval(()=>setNowTime(new Date()),60_000); return ()=>clearInterval(t) }, [])
+  useEffect(() => { const t=setInterval(()=>setNowTime(new Date()),10_000); return ()=>clearInterval(t) }, [])
 
   const companyMap  = Object.fromEntries(companies.map(c => [c.id, c]))
   const baseDate    = date ?? new Date()
@@ -164,7 +164,8 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
   const endHLabel   = viewEndH >= 24 ? '24:00' : `${String(Math.floor(viewEndH)).padStart(2,'0')}:00`
   const rangeLabel  = `${String(Math.floor(viewStart)).padStart(2,'0')}:00 – ${endHLabel}`
 
-  const nowMins     = nowTime.getHours() * 60 + nowTime.getMinutes()
+  // Include seconds so the position is always exact, even between tick intervals
+  const nowMins     = nowTime.getHours() * 60 + nowTime.getMinutes() + nowTime.getSeconds() / 60
   const nowPct      = ((nowMins - viewStart * 60) / (viewportHours * 60)) * 100
   const nowVisible  = nowPct >= 0 && nowPct <= 100
 
