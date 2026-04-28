@@ -3136,3 +3136,63 @@ html, body {
   color: var(--text);
   letter-spacing: 0.3px;
 }
+
+/* ── Live entry card (Einträge-Seite) ────────────────────────── */
+.live-entry-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Pulsing left bar */
+.live-entry-bar {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex-shrink: 0;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.live-entry-dot-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.live-entry-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: pulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* Duration pulses too */
+.live-entry-duration {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+/* LIVE badge */
+.live-badge {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--success);
+  opacity: 0.9;
+}
+
+.live-badge-inline {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--success);
+  margin-left: 6px;
+}

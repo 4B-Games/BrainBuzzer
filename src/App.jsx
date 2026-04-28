@@ -170,7 +170,7 @@ export default function App() {
             liveEntry={liveEntry}
           />
         )}
-        {page === 'entries' && <EntriesView dataVersion={dataVersion} onDataChange={refresh} />}
+        {page === 'entries' && <EntriesView dataVersion={dataVersion} onDataChange={refresh} liveEntry={liveEntry} />}
         {page === 'reports' && <ReportsView dataVersion={dataVersion} currentUser={currentUser} />}
         {page === 'team' && currentUser?.role === 'admin' && <TeamView dataVersion={dataVersion} />}
         {page === 'settings' && <SettingsView onDataChange={refresh} currentUser={currentUser} />}
