@@ -10,7 +10,7 @@ import Timeline from '../components/Timeline.jsx'
 export default function TimerView({
   timerRunning, timerElapsed,
   onTimerStart, onTimerStop,
-  onDataChange, activeEntry,
+  onDataChange, activeEntry, liveEntry,
 }) {
   const [companies,         setCompanies]         = useState([])
   const [todayEntries,      setTodayEntries]       = useState([])
@@ -116,6 +116,7 @@ export default function TimerView({
           onBlockMove={handleBlockMove}
           onBlockDelete={handleBlockDelete}
           onBlockUpdate={handleBlockUpdate}
+          liveEntry={liveEntry}
           date={new Date()}
         />
       </div>

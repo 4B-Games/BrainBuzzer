@@ -2980,3 +2980,33 @@ html, body {
 .confirm-action-btn--warning:hover {
   background: var(--accent-hover);
 }
+
+/* ── Live timeline block ─────────────────────────────────────── */
+.tl-block--live {
+  z-index: 12;
+  cursor: default !important;
+  animation: live-pulse 2s ease-in-out infinite;
+  /* Slightly more saturated/bright than regular blocks */
+  filter: brightness(1.08) saturate(1.15);
+}
+
+@keyframes live-pulse {
+  0%, 100% { filter: brightness(1.08) saturate(1.15); }
+  50%       { filter: brightness(1.18) saturate(1.25); }
+}
+
+/* Pulsing white dot at the right edge of the live block */
+.tl-live-dot {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+  animation: pulse 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+  pointer-events: none;
+}

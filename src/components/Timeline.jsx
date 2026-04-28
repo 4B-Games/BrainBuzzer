@@ -117,7 +117,7 @@ function BlockEditor({ entry, companies, pos, onSave, onDelete, onClose }) {
 
 // ── Main component ─────────────────────────────────────────────────
 
-export default function Timeline({ entries, companies, onRangeSelect, onBlockMove, onBlockDelete, onBlockUpdate, date }) {
+export default function Timeline({ entries, companies, onRangeSelect, onBlockMove, onBlockDelete, onBlockUpdate, liveEntry, date }) {
   const trackRef    = useRef(null)
   const movingRef   = useRef(null)
   const resizingRef = useRef(null)
@@ -355,6 +355,33 @@ export default function Timeline({ entries, companies, onRangeSelect, onBlockMov
               </div>
             )
           })}
+
+          {/* ── Live block: grows in real time while timer runs ── */}
+          {liveEntry && (() => {
+            const leftPct  = timeToViewPct(liveEntry.start, viewStart, viewportHours)
+            const widthPct = durToViewPct(liveEntry.elapsed, viewportHours)
+            const company  = companyMap[liveEntry.companyId]
+            const project  = company?.projects?.find(p => p.id === liveEntry.projectId)
+            return (
+              <div
+                className="tl-block tl-block--live"
+                style={{ left: `${leftPct}%`, width: `${Math.max(widthPct, 0.3)}%`, background: liveEntry.color }}
+              >
+                <span className="tl-live-dot" />
+                <div className="tl-block-info">
+                  {widthPct > 5 && <span className="tl-block-company">{liveEntry.companyName}</span>}
+                  {liveEntry.projectName && widthPct > 4 && (
+                    <span className="tl-block-project">
+                      {liveEntry.projectEmoji ? liveEntry.projectEmoji + ' ' : ''}{liveEntry.projectName}
+                    </span>
+                  )}
+                  {widthPct > 2 && (
+                    <span className="tl-block-duration">{fmtDurationShort(liveEntry.elapsed)}</span>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
 
           {dragRange && (
             <>

@@ -98,6 +98,20 @@ export default function App() {
     return <LoginView onLogin={handleLogin} theme={theme} onThemeToggle={toggleTheme} />
   }
 
+  // Live block data for the timeline – updates every second while timer is running
+  const liveEntry = running && activeEntry && timerCtx
+    ? {
+        start:        timerCtx.startISO,
+        elapsed:      activeEntry.elapsed,
+        color:        activeEntry.companyColor,
+        companyId:    timerCtx.companyId,
+        projectId:    timerCtx.projectId,
+        companyName:  activeEntry.companyName,
+        projectEmoji: activeEntry.projectEmoji ?? '',
+        projectName:  activeEntry.projectName  ?? '',
+      }
+    : null
+
   return (
     <div className="app-shell">
       <Sidebar
@@ -119,6 +133,7 @@ export default function App() {
             onTimerStop={handleTimerStop}
             onDataChange={refresh}
             activeEntry={activeEntry}
+            liveEntry={liveEntry}
           />
         )}
         {page === 'entries' && <EntriesView dataVersion={dataVersion} onDataChange={refresh} />}
