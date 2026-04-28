@@ -2,7 +2,9 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { getCurrentUser, logout } from './services/authService.js'
 import { addEntry } from './services/dataService.js'
 import { useTimer } from './hooks/useTimer.js'
+import { useKeyboardShortcuts, SHORTCUTS } from './hooks/useKeyboardShortcuts.js'
 import { uid } from './utils/format.js'
+import { X } from 'lucide-react'
 import LoginView from './views/LoginView.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import TimerView from './views/TimerView.jsx'
@@ -38,8 +40,18 @@ export default function App() {
     }
   }, [elapsed, running]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false)
+
   const refresh      = useCallback(() => setDataVersion(v => v + 1), [])
   const toggleTheme  = useCallback(() => setTheme(t => t === 'dark' ? 'light' : 'dark'), [])
+
+  useKeyboardShortcuts({
+    timerRunning: running,
+    onStopTimer:  handleTimerStop,
+    onNavigate:   setPage,
+    onNewEntry:   () => setPage('timer'),
+    onShowHelp:   () => setShowShortcutHelp(h => !h),
+  })
 
   // ── Timer start (called from TimerView) ──────────────────────
   function handleTimerStart({ companyId, projectId, companyName, companyColor, projectName, projectEmoji, note }) {
@@ -114,6 +126,28 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      {/* Keyboard shortcut help overlay */}
+      {showShortcutHelp && (
+        <div className="modal-overlay" onClick={() => setShowShortcutHelp(false)}>
+          <div className="modal modal--sm" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Tastenkürzel</h2>
+              <button className="modal-close" onClick={() => setShowShortcutHelp(false)}><X size={18}/></button>
+            </div>
+            <table className="shortcut-table">
+              <tbody>
+                {SHORTCUTS.map(s => (
+                  <tr key={s.key}>
+                    <td><kbd className="kbd">{s.key}</kbd></td>
+                    <td>{s.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       <Sidebar
         page={page}
         onNavigate={setPage}

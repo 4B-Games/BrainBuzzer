@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Play, PlusCircle } from 'lucide-react'
+import { Play, PlusCircle, Star, X } from 'lucide-react'
 import { getActiveCompanies, getEntries, updateEntry, deleteEntry } from '../services/dataService.js'
+import { getCurrentUser } from '../services/authService.js'
+import { getTemplates, saveTemplate, deleteTemplate } from '../services/templateService.js'
 import { fmtDuration, isToday } from '../utils/format.js'
 import TileGrid from '../components/TileGrid.jsx'
 import TimerBanner from '../components/TimerBanner.jsx'
@@ -14,6 +16,7 @@ export default function TimerView({
 }) {
   const [companies,         setCompanies]         = useState([])
   const [todayEntries,      setTodayEntries]       = useState([])
+  const [templates,         setTemplates]          = useState([])
   const [selectedCompanyId, setSelectedCompanyId] = useState(null)
   const [selectedProjectId, setSelectedProjectId] = useState(null)
   const [note,              setNote]              = useState('')
@@ -21,11 +24,15 @@ export default function TimerView({
   const [prefilledTimes,    setPrefilledTimes]     = useState(null)
   const [tlVersion,         setTlVersion]          = useState(0)
 
+  const user = getCurrentUser()
+
   function loadData() {
-    setCompanies(getActiveCompanies())
+    const cos = getActiveCompanies()
+    setCompanies(cos)
     setTodayEntries(
       getEntries().filter(e => isToday(e.start)).sort((a, b) => new Date(a.start) - new Date(b.start))
     )
+    if (user) setTemplates(getTemplates(user.id))
   }
 
   useEffect(() => { loadData() }, [tlVersion])
@@ -33,6 +40,11 @@ export default function TimerView({
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId)
   const selectedProject = selectedCompany?.projects.find(p => p.id === selectedProjectId)
+
+  // Check if current selection is already saved as a template
+  const isCurrentSaved = templates.some(
+    t => t.companyId === selectedCompanyId && (t.projectId ?? null) === (selectedProjectId ?? null)
+  )
 
   function handleCompanySelect(id) {
     if (timerRunning) return
@@ -42,6 +54,22 @@ export default function TimerView({
   function handleProjectSelect(id) {
     if (timerRunning) return
     setSelectedProjectId(id)
+  }
+
+  function startWith(companyId, projectId) {
+    const co = companies.find(c => c.id === companyId)
+    const pr = co?.projects.find(p => p.id === projectId)
+    if (!co) return
+    setSelectedCompanyId(companyId)
+    setSelectedProjectId(projectId)
+    onTimerStart({
+      companyId, projectId: projectId ?? null,
+      companyName:  co.name,
+      companyColor: co.color,
+      projectName:  pr?.name ?? '',
+      projectEmoji: pr?.emoji ?? '',
+      note: '',
+    })
   }
 
   function handleStart() {
@@ -57,15 +85,22 @@ export default function TimerView({
     })
   }
 
+  function handleSaveTemplate() {
+    if (!selectedCompanyId || !user) return
+    saveTemplate({ userId: user.id, companyId: selectedCompanyId, projectId: selectedProjectId ?? null })
+    setTemplates(getTemplates(user.id))
+  }
+
+  function handleDeleteTemplate(id) {
+    deleteTemplate(id)
+    setTemplates(getTemplates(user.id))
+  }
+
   function handleBlockMove(entryId, newStart, newEnd) {
     updateEntry(entryId, { start: newStart, end: newEnd, duration: Math.floor((new Date(newEnd) - new Date(newStart)) / 1000) })
     setTlVersion(v => v + 1); onDataChange()
   }
-
-  function handleBlockDelete(entryId) {
-    deleteEntry(entryId); setTlVersion(v => v + 1); onDataChange()
-  }
-
+  function handleBlockDelete(entryId) { deleteEntry(entryId); setTlVersion(v => v + 1); onDataChange() }
   function handleBlockUpdate(entryId, { companyId, projectId }) {
     updateEntry(entryId, { companyId, projectId: projectId ?? null })
     setTlVersion(v => v + 1); onDataChange()
@@ -73,7 +108,6 @@ export default function TimerView({
 
   return (
     <>
-      {/* ── Header + running banner ── */}
       <div className="view view--no-bottom">
         <div className="view-header">
           <h1>Timer</h1>
@@ -81,6 +115,41 @@ export default function TimerView({
             <PlusCircle size={16} /> Manuell erfassen
           </button>
         </div>
+
+        {/* ── Schnellstart-Vorlagen ── */}
+        {templates.length > 0 && !timerRunning && (
+          <section className="section">
+            <h2 className="section-title">Schnellstart</h2>
+            <div className="template-list">
+              {templates.map(tpl => {
+                const co = companies.find(c => c.id === tpl.companyId)
+                const pr = co?.projects.find(p => p.id === tpl.projectId)
+                if (!co) return null
+                return (
+                  <div key={tpl.id} className="template-tile">
+                    <button
+                      className="template-tile-start"
+                      onClick={() => startWith(tpl.companyId, tpl.projectId)}
+                      style={{ '--tpl-color': co.color }}
+                    >
+                      <span className="template-tile-dot" style={{ background: co.color }} />
+                      <span className="template-tile-co">{co.name}</span>
+                      {pr && (
+                        <span className="template-tile-pr">
+                          {pr.emoji ? pr.emoji + ' ' : ''}{pr.name}
+                        </span>
+                      )}
+                      <Play size={14} className="template-tile-play" fill="currentColor" />
+                    </button>
+                    <button className="template-tile-remove" onClick={() => handleDeleteTemplate(tpl.id)} title="Vorlage entfernen">
+                      <X size={12} />
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         {timerRunning && activeEntry && (
           <>
@@ -107,7 +176,6 @@ export default function TimerView({
         </p>
       </div>
 
-      {/* ── Full-width timeline ── */}
       <div className="today-tl-full">
         <Timeline
           entries={todayEntries}
@@ -121,7 +189,6 @@ export default function TimerView({
         />
       </div>
 
-      {/* ── Controls below timeline ── */}
       <div className="view view--no-top">
         {!timerRunning && (
           <>
@@ -147,6 +214,11 @@ export default function TimerView({
                 <div className="timer-actions">
                   <input className="note-input" type="text" placeholder="Optionale Notiz …"
                     value={note} onChange={e => setNote(e.target.value)} />
+                  {!isCurrentSaved && (
+                    <button className="btn-template-save" onClick={handleSaveTemplate} title="Als Schnellstart-Vorlage speichern">
+                      <Star size={15} />
+                    </button>
+                  )}
                   <button className="btn-start" onClick={handleStart}
                     style={{ background: selectedCompany?.color }}>
                     <Play size={18} fill="currentColor" /> Starten
