@@ -33,7 +33,10 @@ function LiveEntryCard({ liveEntry, companies }) {
         <span className="live-entry-dot" style={{ background: liveEntry.color }} />
       </div>
       <div className="entry-info">
-        <span className="entry-company">{liveEntry.companyName}</span>
+        <div className="live-company-row">
+          <span className="entry-company">{liveEntry.companyName}</span>
+          <span className="live-badge">● LIVE</span>
+        </div>
         {liveEntry.projectName && (
           <span className="entry-project">
             {liveEntry.projectEmoji ? liveEntry.projectEmoji + ' ' : ''}{liveEntry.projectName}
@@ -46,7 +49,6 @@ function LiveEntryCard({ liveEntry, companies }) {
           {fmtDurationShort(liveEntry.elapsed)}
         </span>
       </div>
-      <span className="live-badge">LIVE</span>
     </div>
   )
 }

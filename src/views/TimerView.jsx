@@ -46,6 +46,10 @@ export default function TimerView({
     t => t.companyId === selectedCompanyId && (t.projectId ?? null) === (selectedProjectId ?? null)
   )
 
+  // Start only allowed when company is selected AND either company has no projects OR a project is chosen
+  const hasProjects = (selectedCompany?.projects.length ?? 0) > 0
+  const canStart    = !!selectedCompanyId && (!hasProjects || !!selectedProjectId)
+
   function handleCompanySelect(id) {
     if (timerRunning) return
     setSelectedCompanyId(id); setSelectedProjectId(null)
@@ -219,9 +223,15 @@ export default function TimerView({
                       <Star size={15} />
                     </button>
                   )}
-                  <button className="btn-start" onClick={handleStart}
-                    style={{ background: selectedCompany?.color }}>
-                    <Play size={18} fill="currentColor" /> Starten
+                  <button
+                    className={`btn-start${canStart ? '' : ' btn-start--disabled'}`}
+                    onClick={canStart ? handleStart : undefined}
+                    disabled={!canStart}
+                    style={{ background: canStart ? selectedCompany?.color : undefined }}
+                    title={!canStart && hasProjects ? 'Bitte zuerst ein Projekt wählen' : undefined}
+                  >
+                    <Play size={18} fill="currentColor" />
+                    {!canStart && hasProjects ? 'Projekt wählen' : 'Starten'}
                   </button>
                 </div>
               </section>
