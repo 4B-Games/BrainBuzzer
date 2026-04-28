@@ -4,6 +4,7 @@ import { getUsers, updateUser, deleteUser, getCurrentUser } from '../services/au
 import { getAllEntries } from '../services/dataService.js'
 import { fmtDate, fmtDurationShort } from '../utils/format.js'
 import UserModal from './UserModal.jsx'
+import ConfirmDialog from './ConfirmDialog.jsx'
 
 function Badge({ role, active }) {
   if (active === false) return <span className="badge badge--off">Inaktiv</span>
@@ -27,7 +28,7 @@ export default function TeamManagement({ dataVersion }) {
   const [allEntries,     setAllEntries]     = useState([])
   const [showModal,      setShowModal]      = useState(false)
   const [editingUser,    setEditingUser]    = useState(null)
-  const [confirmDelete,  setConfirmDelete]  = useState(null)
+  const [confirmDialog,  setConfirmDialog]  = useState(null)
   const [resetPwUser,    setResetPwUser]    = useState(null)
   const [newPw,          setNewPw]          = useState('')
   const [pwMsg,          setPwMsg]          = useState('')
@@ -40,15 +41,27 @@ export default function TeamManagement({ dataVersion }) {
 
   useEffect(() => { refresh() }, [dataVersion])
 
-  function handleDelete(id) {
-    deleteUser(id)
-    refresh()
-    setConfirmDelete(null)
+  function askDelete(u) {
+    setConfirmDialog({
+      title: 'Konto löschen',
+      message: `Das Konto von „${u.name}" wird dauerhaft gelöscht. Ihre Zeiteinträge bleiben erhalten, sind aber keinem Konto mehr zugeordnet.`,
+      confirmLabel: 'Konto löschen',
+      variant: 'danger',
+      onConfirm: () => { deleteUser(u.id); refresh(); setConfirmDialog(null) },
+    })
   }
 
-  function handleToggleActive(user) {
-    updateUser(user.id, { active: user.active === false ? true : false })
-    refresh()
+  function askToggleActive(u) {
+    const isActive = u.active !== false
+    setConfirmDialog({
+      title: isActive ? 'Konto deaktivieren' : 'Konto aktivieren',
+      message: isActive
+        ? `Das Konto von „${u.name}" wird deaktiviert. Die Person kann sich nicht mehr anmelden; Zeiteinträge und Daten bleiben vollständig erhalten.`
+        : `Das Konto von „${u.name}" wird reaktiviert. Die Person kann sich wieder mit ihren bestehenden Zugangsdaten anmelden.`,
+      confirmLabel: isActive ? 'Deaktivieren' : 'Aktivieren',
+      variant: 'warning',
+      onConfirm: () => { updateUser(u.id, { active: !isActive }); refresh(); setConfirmDialog(null) },
+    })
   }
 
   function handleResetPw() {
@@ -159,25 +172,18 @@ export default function TeamManagement({ dataVersion }) {
                         <button
                           className={`mgmt-btn${u.active === false ? ' mgmt-btn--activate' : ' mgmt-btn--deactivate'}`}
                           title={u.active === false ? 'Aktivieren' : 'Deaktivieren'}
-                          onClick={() => handleToggleActive(u)}
+                          onClick={() => askToggleActive(u)}
                         >
                           {u.active === false ? <UserCheck size={14} /> : <UserX size={14} />}
                         </button>
                       )}
 
-                      {/* Delete (not yourself, with confirmation) */}
+                      {/* Delete (not yourself) */}
                       {!isSelf && (
-                        confirmDelete === u.id ? (
-                          <>
-                            <button className="mgmt-btn mgmt-btn--danger" onClick={() => handleDelete(u.id)}>Ja</button>
-                            <button className="mgmt-btn" onClick={() => setConfirmDelete(null)}>Nein</button>
-                          </>
-                        ) : (
-                          <button className="mgmt-btn mgmt-btn--danger-soft" title="Löschen"
-                            onClick={() => setConfirmDelete(u.id)}>
-                            <Trash2 size={14} />
-                          </button>
-                        )
+                        <button className="mgmt-btn mgmt-btn--danger-soft" title="Konto löschen"
+                          onClick={() => askDelete(u)}>
+                          <Trash2 size={14} />
+                        </button>
                       )}
                     </div>
                   </td>
@@ -194,6 +200,17 @@ export default function TeamManagement({ dataVersion }) {
           user={editingUser}
           onClose={() => { setShowModal(false); setEditingUser(null) }}
           onSaved={refresh}
+        />
+      )}
+
+      {confirmDialog && (
+        <ConfirmDialog
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmLabel={confirmDialog.confirmLabel}
+          variant={confirmDialog.variant}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
         />
       )}
 

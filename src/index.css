@@ -2937,3 +2937,46 @@ html, body {
 .archiv-delete-final-btn:hover {
   background: color-mix(in srgb, var(--danger) 85%, black);
 }
+
+/* ── ConfirmDialog ────────────────────────────────────────────── */
+.modal--sm { max-width: 460px; }
+
+.confirm-msg {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+  padding: 2px 0 4px;
+}
+
+.confirm-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: background 0.15s, filter 0.15s;
+}
+
+.confirm-action-btn--danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.confirm-action-btn--danger:hover {
+  filter: brightness(0.88);
+}
+
+.confirm-action-btn--warning {
+  background: var(--accent);
+  color: #fff;
+}
+
+.confirm-action-btn--warning:hover {
+  background: var(--accent-hover);
+}

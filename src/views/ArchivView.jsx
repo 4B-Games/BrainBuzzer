@@ -6,41 +6,16 @@ import {
   permanentlyDeleteCompany, permanentlyDeleteProject,
   countEntriesForCompany, countEntriesForProject,
 } from '../services/dataService.js'
-
-function DeleteConfirm({ label, entryCount, onConfirm, onCancel }) {
-  return (
-    <div className="archiv-confirm">
-      <p className="archiv-confirm-text">
-        Wirklich endgültig löschen?
-        {entryCount > 0 && (
-          <> &nbsp;
-            <strong>{entryCount} {entryCount === 1 ? 'Zeiteintrag verliert' : 'Zeiteinträge verlieren'}</strong>
-            {' '}die Zuordnung zu „{label}". Die Einträge selbst bleiben erhalten.
-          </>
-        )}
-      </p>
-      <div className="archiv-confirm-actions">
-        <button className="btn-secondary-sm" onClick={onCancel}>Abbrechen</button>
-        <button className="archiv-delete-final-btn" onClick={onConfirm}>
-          <Trash2 size={13} /> Endgültig löschen
-        </button>
-      </div>
-    </div>
-  )
-}
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
 
 export default function ArchivView({ onDataChange }) {
-  const [companies, setCompanies] = useState([])
-  const [confirmItem, setConfirmItem] = useState(null)
-  // confirmItem = { type: 'company'|'project', companyId, projectId, label, entryCount }
+  const [companies,     setCompanies]     = useState([])
+  const [confirmDialog, setConfirmDialog] = useState(null)
 
   function load() { setCompanies(getCompanies()) }
   useEffect(() => { load() }, [])
 
-  const archivedCompanies = useMemo(
-    () => companies.filter(c => c.archived),
-    [companies]
-  )
+  const archivedCompanies = useMemo(() => companies.filter(c => c.archived), [companies])
 
   const archivedProjects = useMemo(() =>
     companies
@@ -49,38 +24,52 @@ export default function ArchivView({ onDataChange }) {
     [companies]
   )
 
-  function handleUnarchiveCompany(id) {
-    unarchiveCompany(id); load(); onDataChange()
-  }
-
-  function handleUnarchiveProject(companyId, projectId) {
-    unarchiveProject(companyId, projectId); load(); onDataChange()
-  }
-
-  function startDeleteCompany(company) {
-    setConfirmItem({
-      type: 'company', companyId: company.id,
-      label: company.name,
-      entryCount: countEntriesForCompany(company.id),
+  function handleUnarchiveCompany(company) {
+    setConfirmDialog({
+      title: 'Unternehmen wiederherstellen',
+      message: `„${company.name}" wird aus dem Archiv geholt und erscheint wieder in der aktiven Auswahl beim Erfassen von Zeiten.`,
+      confirmLabel: 'Wiederherstellen',
+      variant: 'warning',
+      onConfirm: () => { unarchiveCompany(company.id); setConfirmDialog(null); load(); onDataChange() },
     })
   }
 
-  function startDeleteProject(company, project) {
-    setConfirmItem({
-      type: 'project', companyId: company.id, projectId: project.id,
-      label: project.name,
-      entryCount: countEntriesForProject(project.id),
+  function handleUnarchiveProject(project) {
+    setConfirmDialog({
+      title: 'Projekt wiederherstellen',
+      message: `„${project.emoji ? project.emoji + ' ' : ''}${project.name}" wird wiederhergestellt und erscheint wieder in der aktiven Projektauswahl unter „${project.company.name}".`,
+      confirmLabel: 'Wiederherstellen',
+      variant: 'warning',
+      onConfirm: () => { unarchiveProject(project.company.id, project.id); setConfirmDialog(null); load(); onDataChange() },
     })
   }
 
-  function confirmDelete() {
-    if (!confirmItem) return
-    if (confirmItem.type === 'company') {
-      permanentlyDeleteCompany(confirmItem.companyId)
-    } else {
-      permanentlyDeleteProject(confirmItem.companyId, confirmItem.projectId)
-    }
-    setConfirmItem(null); load(); onDataChange()
+  function handleDeleteCompany(company) {
+    const count = countEntriesForCompany(company.id)
+    const entryText = count > 0
+      ? ` ${count} ${count === 1 ? 'Zeiteintrag verliert' : 'Zeiteinträge verlieren'} die Unternehmenszuordnung – die Einträge selbst bleiben erhalten.`
+      : ' Es sind keine Zeiteinträge mit diesem Unternehmen verknüpft.'
+    setConfirmDialog({
+      title: 'Unternehmen endgültig löschen',
+      message: `„${company.name}" wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.${entryText}`,
+      confirmLabel: 'Endgültig löschen',
+      variant: 'danger',
+      onConfirm: () => { permanentlyDeleteCompany(company.id); setConfirmDialog(null); load(); onDataChange() },
+    })
+  }
+
+  function handleDeleteProject(project) {
+    const count = countEntriesForProject(project.id)
+    const entryText = count > 0
+      ? ` ${count} ${count === 1 ? 'Zeiteintrag verliert' : 'Zeiteinträge verlieren'} die Projektzuordnung – die Einträge selbst bleiben erhalten.`
+      : ' Es sind keine Zeiteinträge mit diesem Projekt verknüpft.'
+    setConfirmDialog({
+      title: 'Projekt endgültig löschen',
+      message: `„${project.emoji ? project.emoji + ' ' : ''}${project.name}" wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.${entryText}`,
+      confirmLabel: 'Endgültig löschen',
+      variant: 'danger',
+      onConfirm: () => { permanentlyDeleteProject(project.company.id, project.id); setConfirmDialog(null); load(); onDataChange() },
+    })
   }
 
   const isEmpty = archivedCompanies.length === 0 && archivedProjects.length === 0
@@ -96,19 +85,17 @@ export default function ArchivView({ onDataChange }) {
           <FolderOpen size={40} />
           <p>Das Archiv ist leer.</p>
           <p className="archiv-empty-sub">
-            Archivierte Unternehmen und Projekte erscheinen hier.
+            Archivierte Unternehmen und Projekte erscheinen hier und können wiederhergestellt oder endgültig gelöscht werden.
           </p>
         </div>
       )}
 
-      {/* ── Archivierte Unternehmen ── */}
       {archivedCompanies.length > 0 && (
         <section className="section">
           <h2 className="section-title">Archivierte Unternehmen</h2>
           <ul className="archiv-list">
             {archivedCompanies.map(c => {
               const ec = countEntriesForCompany(c.id)
-              const isConfirming = confirmItem?.type === 'company' && confirmItem.companyId === c.id
               return (
                 <li key={c.id} className="archiv-item">
                   <div className="archiv-item-header">
@@ -128,22 +115,14 @@ export default function ArchivView({ onDataChange }) {
                       )}
                     </div>
                     <div className="archiv-item-actions">
-                      <button className="archiv-restore-btn" onClick={() => handleUnarchiveCompany(c.id)}>
+                      <button className="archiv-restore-btn" onClick={() => handleUnarchiveCompany(c)}>
                         <RotateCcw size={14} /> Wiederherstellen
                       </button>
-                      <button className="archiv-delete-btn" onClick={() => startDeleteCompany(c)}>
+                      <button className="archiv-delete-btn" title="Endgültig löschen" onClick={() => handleDeleteCompany(c)}>
                         <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
-                  {isConfirming && (
-                    <DeleteConfirm
-                      label={c.name}
-                      entryCount={confirmItem.entryCount}
-                      onConfirm={confirmDelete}
-                      onCancel={() => setConfirmItem(null)}
-                    />
-                  )}
                 </li>
               )
             })}
@@ -151,14 +130,12 @@ export default function ArchivView({ onDataChange }) {
         </section>
       )}
 
-      {/* ── Archivierte Projekte ── */}
       {archivedProjects.length > 0 && (
         <section className="section">
           <h2 className="section-title">Archivierte Projekte</h2>
           <ul className="archiv-list">
             {archivedProjects.map(p => {
               const ep = countEntriesForProject(p.id)
-              const isConfirming = confirmItem?.type === 'project' && confirmItem.projectId === p.id
               return (
                 <li key={p.id} className="archiv-item">
                   <div className="archiv-item-header">
@@ -174,27 +151,30 @@ export default function ArchivView({ onDataChange }) {
                       </span>
                     </div>
                     <div className="archiv-item-actions">
-                      <button className="archiv-restore-btn" onClick={() => handleUnarchiveProject(p.company.id, p.id)}>
+                      <button className="archiv-restore-btn" onClick={() => handleUnarchiveProject(p)}>
                         <RotateCcw size={14} /> Wiederherstellen
                       </button>
-                      <button className="archiv-delete-btn" onClick={() => startDeleteProject(p.company, p)}>
+                      <button className="archiv-delete-btn" title="Endgültig löschen" onClick={() => handleDeleteProject(p)}>
                         <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
-                  {isConfirming && (
-                    <DeleteConfirm
-                      label={p.name}
-                      entryCount={confirmItem.entryCount}
-                      onConfirm={confirmDelete}
-                      onCancel={() => setConfirmItem(null)}
-                    />
-                  )}
                 </li>
               )
             })}
           </ul>
         </section>
+      )}
+
+      {confirmDialog && (
+        <ConfirmDialog
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmLabel={confirmDialog.confirmLabel}
+          variant={confirmDialog.variant}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
+        />
       )}
     </div>
   )

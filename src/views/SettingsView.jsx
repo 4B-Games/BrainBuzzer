@@ -3,77 +3,79 @@ import { PlusCircle, ChevronDown, ChevronRight, Archive } from 'lucide-react'
 import { getActiveCompanies, saveCompanies, getCompanies, archiveCompany, archiveProject } from '../services/dataService.js'
 import { uid } from '../utils/format.js'
 import EmojiPicker from '../components/EmojiPicker.jsx'
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
 
 export default function SettingsView({ onDataChange, currentUser }) {
   const isAdmin = currentUser?.role === 'admin'
 
-  const [companies,       setCompanies]       = useState([])
-  const [expanded,        setExpanded]        = useState({})
-  const [newCompanyName,  setNewCompanyName]  = useState('')
-  const [newCompanyColor, setNewCompanyColor] = useState('#6366f1')
-  const [newProjectNames, setNewProjectNames] = useState({})
-  const [newProjectEmojis,setNewProjectEmojis]= useState({})
-  const [confirmArchive,  setConfirmArchive]  = useState(null)
+  const [companies,        setCompanies]        = useState([])
+  const [expanded,         setExpanded]         = useState({})
+  const [newCompanyName,   setNewCompanyName]   = useState('')
+  const [newCompanyColor,  setNewCompanyColor]  = useState('#6366f1')
+  const [newProjectNames,  setNewProjectNames]  = useState({})
+  const [newProjectEmojis, setNewProjectEmojis] = useState({})
+  const [confirmDialog,    setConfirmDialog]    = useState(null)
 
-  function load() {
-    // Show only active companies + active projects in settings
-    setCompanies(getActiveCompanies())
-  }
-
+  function load() { setCompanies(getActiveCompanies()) }
   useEffect(() => { load() }, [])
-
-  function persist(updated) {
-    // Merge back into full company list (keeping archived ones)
-    const allCompanies = getCompanies()
-    const updatedIds   = new Set(updated.map(c => c.id))
-    const merged = [
-      ...allCompanies.filter(c => c.archived),   // keep archived
-      ...updated,                                  // new active state
-      ...allCompanies.filter(c => !c.archived && !updatedIds.has(c.id)), // any non-archived not in updated
-    ]
-    saveCompanies(merged)
-    load()
-    onDataChange()
-  }
 
   function addCompany() {
     const name = newCompanyName.trim()
     if (!name) return
-    const allCompanies = getCompanies()
-    saveCompanies([...allCompanies, { id: uid(), name, color: newCompanyColor, projects: [] }])
+    saveCompanies([...getCompanies(), { id: uid(), name, color: newCompanyColor, projects: [] }])
     setNewCompanyName(''); setNewCompanyColor('#6366f1')
     load(); onDataChange()
   }
 
   function updateCompanyColor(id, color) {
-    const allCompanies = getCompanies().map(c => c.id === id ? { ...c, color } : c)
-    saveCompanies(allCompanies); load(); onDataChange()
+    saveCompanies(getCompanies().map(c => c.id === id ? { ...c, color } : c))
+    load(); onDataChange()
   }
 
-  function handleArchiveCompany(id) {
-    archiveCompany(id)
-    setConfirmArchive(null); load(); onDataChange()
+  function doArchiveCompany(id) {
+    archiveCompany(id); setConfirmDialog(null); load(); onDataChange()
+  }
+
+  function doArchiveProject(companyId, projectId) {
+    archiveProject(companyId, projectId); setConfirmDialog(null); load(); onDataChange()
   }
 
   function addProject(companyId) {
     const name = (newProjectNames[companyId] ?? '').trim()
     if (!name) return
     const emoji = newProjectEmojis[companyId] ?? ''
-    const allCompanies = getCompanies().map(c =>
+    saveCompanies(getCompanies().map(c =>
       c.id === companyId ? { ...c, projects: [...c.projects, { id: uid(), name, emoji }] } : c
-    )
-    saveCompanies(allCompanies)
+    ))
     setNewProjectNames(prev => ({ ...prev, [companyId]: '' }))
     setNewProjectEmojis(prev => ({ ...prev, [companyId]: '' }))
     load(); onDataChange()
   }
 
-  function handleArchiveProject(companyId, projectId) {
-    archiveProject(companyId, projectId); load(); onDataChange()
-  }
-
   function toggleExpand(id) {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  // ── Archive confirmations ──────────────────────────────────────
+
+  function askArchiveCompany(company) {
+    setConfirmDialog({
+      title: 'Unternehmen archivieren',
+      message: `„${company.name}" wird archiviert und aus der aktiven Auswahl entfernt. Bestehende Zeiteinträge bleiben erhalten. Im Menüpunkt Archiv kann es jederzeit wiederhergestellt oder endgültig gelöscht werden.`,
+      confirmLabel: 'Archivieren',
+      variant: 'warning',
+      onConfirm: () => doArchiveCompany(company.id),
+    })
+  }
+
+  function askArchiveProject(company, project) {
+    setConfirmDialog({
+      title: 'Projekt archivieren',
+      message: `Das Projekt „${project.emoji ? project.emoji + ' ' : ''}${project.name}" (in: ${company.name}) wird archiviert und aus der aktiven Auswahl entfernt. Im Archiv kann es jederzeit wiederhergestellt oder endgültig gelöscht werden.`,
+      confirmLabel: 'Archivieren',
+      variant: 'warning',
+      onConfirm: () => doArchiveProject(company.id, project.id),
+    })
   }
 
   return (
@@ -85,7 +87,6 @@ export default function SettingsView({ onDataChange, currentUser }) {
         )}
       </div>
 
-      {/* Add company */}
       {isAdmin && (
         <section className="section">
           <h2 className="section-title">Unternehmen hinzufügen</h2>
@@ -104,9 +105,8 @@ export default function SettingsView({ onDataChange, currentUser }) {
         </section>
       )}
 
-      {/* Company list (active only) */}
       <section className="section">
-        <h2 className="section-title">Aktive Unternehmen & Projekte</h2>
+        <h2 className="section-title">Aktive Unternehmen &amp; Projekte</h2>
 
         {companies.length === 0 && (
           <p className="settings-empty">Keine aktiven Unternehmen vorhanden.</p>
@@ -129,18 +129,10 @@ export default function SettingsView({ onDataChange, currentUser }) {
                       title="Farbe ändern" className="settings-color-inline" />
                   )}
                   {isAdmin && (
-                    confirmArchive === company.id ? (
-                      <>
-                        <span className="confirm-text">Archivieren?</span>
-                        <button className="btn-danger-sm" onClick={() => handleArchiveCompany(company.id)}>Ja</button>
-                        <button className="btn-secondary-sm" onClick={() => setConfirmArchive(null)}>Nein</button>
-                      </>
-                    ) : (
-                      <button className="btn-icon-archive" onClick={() => setConfirmArchive(company.id)}
-                        title="Unternehmen archivieren">
-                        <Archive size={15} />
-                      </button>
-                    )
+                    <button className="btn-icon-archive" title="Unternehmen archivieren"
+                      onClick={() => askArchiveCompany(company)}>
+                      <Archive size={15} />
+                    </button>
                   )}
                 </div>
               </div>
@@ -153,8 +145,8 @@ export default function SettingsView({ onDataChange, currentUser }) {
                         {p.emoji && <span className="settings-project-emoji">{p.emoji}</span>}
                         <span>{p.name}</span>
                         {isAdmin && (
-                          <button className="btn-icon-archive" onClick={() => handleArchiveProject(company.id, p.id)}
-                            title="Projekt archivieren">
+                          <button className="btn-icon-archive" title="Projekt archivieren"
+                            onClick={() => askArchiveProject(company, p)}>
                             <Archive size={13} />
                           </button>
                         )}
@@ -186,6 +178,17 @@ export default function SettingsView({ onDataChange, currentUser }) {
           ))}
         </ul>
       </section>
+
+      {confirmDialog && (
+        <ConfirmDialog
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmLabel={confirmDialog.confirmLabel}
+          variant={confirmDialog.variant}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
+        />
+      )}
     </div>
   )
 }
