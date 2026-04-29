@@ -18,8 +18,8 @@
   --border:       #e1e4ef;
   --text:         #111827;        /* near-black, like the reference */
   --text-dim:     #6b7280;
-  --accent:       #2563eb;        /* professional blue matching 4brain */
-  --accent-hover: #1d4ed8;
+  --accent:       #7c4dff;        /* 4brain brand purple */
+  --accent-hover: #6b3fee;
   --danger:       #dc2626;
   --success:      #059669;
   --radius:       10px;
@@ -35,8 +35,8 @@
   --border:       #2d3256;
   --text:         #f0f2ff;
   --text-dim:     #9098b8;
-  --accent:       #3b82f6;        /* brighter blue for dark */
-  --accent-hover: #2563eb;
+  --accent:       #9d71ff;        /* lighter brand purple for dark bg */
+  --accent-hover: #7c4dff;
   --danger:       #f87171;
   --success:      #34d399;
   --shadow:       0 4px 24px rgba(0,0,0,0.45);
