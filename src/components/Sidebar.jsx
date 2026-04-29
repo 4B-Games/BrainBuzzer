@@ -20,7 +20,7 @@ export default function Sidebar({ page, onNavigate, activeEntry, currentUser, on
       <SidebarParticles />
 
       <div className="sidebar-logo" style={{ position: 'relative', zIndex: 1 }}>
-        <div className="sidebar-logo-icon"><Clock size={30} /></div>
+        <div className="sidebar-logo-icon"><Clock size={36} /></div>
         <div>
           <div className="sidebar-logo-name">Brain<strong>Buzzer</strong></div>
           <div className="sidebar-logo-tag">Zeiterfassung</div>
