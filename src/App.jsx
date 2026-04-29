@@ -17,7 +17,7 @@ import ArchivView from './views/ArchivView.jsx'
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000
 
 export default function App() {
-  const [theme,       setTheme]       = useState(() => localStorage.getItem('bb_theme') || 'dark')
+  const [theme,       setTheme]       = useState(() => localStorage.getItem('bb_theme') || 'light')
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser())
   const [page,        setPage]        = useState('timer')
   const [activeEntry, setActiveEntry] = useState(null)   // company/project metadata + elapsed
@@ -29,7 +29,12 @@ export default function App() {
   const { running, elapsed, start, stop, reset } = useTimer()
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
+    // light = no attribute needed (CSS :root default), dark = [data-theme="dark"]
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark')
+    } else {
+      document.documentElement.removeAttribute('data-theme')
+    }
     localStorage.setItem('bb_theme', theme)
   }, [theme])
 

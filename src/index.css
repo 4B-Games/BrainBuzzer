@@ -1,7 +1,7 @@
 /* ================================================================
    BrainBuzzer – Global Styles
-   Themes: dark (default) / light via [data-theme="light"]
-   Font: IBM Plex Mono
+   Themes: light (default, inspired by 4brain.applox.com) / dark
+   Font: Inter (clean, modern sans-serif)
    ================================================================ */
 
 *, *::before, *::after {
@@ -10,51 +10,46 @@
   padding: 0;
 }
 
-/* ── Dark Theme (default) ──────────────────────────────────── */
+/* ── Light Theme (default) ─────────────────────────────────── */
 :root {
-  /* Hintergrund deutlich dunkler → Karten/Flächen heben sich ab */
-  --bg:           #09090f;
-  --surface:      #13131f;
-  --surface2:     #1c1c2d;
-  --border:       #36364e;   /* sichtbare Trennlinien */
-  /* Text: klares Weiß statt gräulichem Off-White */
-  --text:         #f4f4ff;
-  --text-dim:     #a0a0c8;   /* war #8888a8, jetzt +30% heller */
-  --accent:       #7577f5;   /* etwas heller für besseren Kontrast auf dunklem Grund */
-  --accent-hover: #6365e0;
-  --danger:       #f87171;   /* heller im Dunkeln */
-  --success:      #34d399;
-  --radius:       8px;
-  --sidebar-w:    250px;
-  --shadow:       0 4px 28px rgba(0,0,0,0.55);
+  --bg:           #f0f2f8;        /* soft blue-tinted grey */
+  --surface:      #ffffff;
+  --surface2:     #f5f6fb;
+  --border:       #e1e4ef;
+  --text:         #111827;        /* near-black, like the reference */
+  --text-dim:     #6b7280;
+  --accent:       #2563eb;        /* professional blue matching 4brain */
+  --accent-hover: #1d4ed8;
+  --danger:       #dc2626;
+  --success:      #059669;
+  --radius:       10px;
+  --sidebar-w:    260px;
+  --shadow:       0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.07);
 }
 
-/* ── Light Theme ───────────────────────────────────────────── */
-[data-theme="light"] {
-  /* Hintergrund satter grau → weiße Karten heben sich ab */
-  --bg:           #dcdce8;
-  --surface:      #ffffff;
-  --surface2:     #eeeef8;
-  --border:       #adadc8;   /* war #d8d8e8, jetzt deutlich dunkler */
-  /* Text: fast schwarz für maximalen Kontrast */
-  --text:         #0a0a18;
-  --text-dim:     #44446a;   /* war #66668a, jetzt 40% dunkler */
-  --accent:       #4547d6;   /* dunkler für besseren Kontrast auf Weiß */
-  --accent-hover: #3436b8;
-  --danger:       #c01c1c;   /* dunkler im Hellen */
-  --success:      #047857;
-  --shadow:       0 4px 20px rgba(0,0,0,0.18);
+/* ── Dark Theme ────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:           #0d0f1a;
+  --surface:      #161928;
+  --surface2:     #1f2237;
+  --border:       #2d3256;
+  --text:         #f0f2ff;
+  --text-dim:     #9098b8;
+  --accent:       #3b82f6;        /* brighter blue for dark */
+  --accent-hover: #2563eb;
+  --danger:       #f87171;
+  --success:      #34d399;
+  --shadow:       0 4px 24px rgba(0,0,0,0.45);
 }
 
 html, body {
   height: 100%;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   line-height: 1.6;
-  /* Bessere Font-Darstellung für schärfere Schrift */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -75,10 +70,10 @@ html, body {
   width: var(--sidebar-w);
   min-width: var(--sidebar-w);
   background: var(--surface);
-  border-right: 1px solid var(--border);
+  border-right: 1.5px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 20px 12px;
+  padding: 20px 14px;
   gap: 16px;
   overflow-y: auto;
 }
@@ -136,11 +131,11 @@ html, body {
   border-radius: var(--radius);
   border: none;
   background: transparent;
-  color: color-mix(in srgb, var(--text) 75%, var(--text-dim));  /* heller als --text-dim */
+  color: var(--text-dim);
   cursor: pointer;
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 500;
   transition: background 0.15s, color 0.15s;
   text-align: left;
   width: 100%;
@@ -148,8 +143,9 @@ html, body {
 
 .sidebar-nav-item:hover { background: var(--surface2); color: var(--text); }
 .sidebar-nav-item.active {
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--accent);
+  font-weight: 600;
 }
 
 /* kept for backwards compat – new SAT banner replaces this */
@@ -384,19 +380,20 @@ html, body {
 }
 
 .view-header h1 {
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.4px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
 }
 
 .section { margin-bottom: 32px; }
 
 .section-title {
-  font-size: 11px;
+  font-size: 11.5px;
   text-transform: uppercase;
-  letter-spacing: 1.4px;
-  color: var(--text);           /* war --text-dim, jetzt volle Sichtbarkeit */
-  opacity: 0.7;
+  letter-spacing: 1.2px;
+  color: var(--text-dim);
+  font-weight: 600;
   margin-bottom: 14px;
 }
 
@@ -1179,14 +1176,15 @@ html, body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 13px 16px;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  transition: background 0.15s;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.15s, background 0.15s;
 }
 
-.entry-item:hover { background: var(--surface2); }
+.entry-item:hover { background: var(--surface2); box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.06); }
 
 .entry-color-bar { width: 4px; height: 36px; border-radius: 2px; flex-shrink: 0; }
 
@@ -1379,7 +1377,7 @@ html, body {
 .modal {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 28px 30px;
   width: 100%;
   max-width: 560px;
