@@ -27,7 +27,7 @@ export default function SidebarParticles() {
       const dot      = document.createElement('span')
       const left     = 4 + Math.random() * 88
       const bottom   = Math.random() * 100
-      const duration = 4 + Math.random() * 6
+      const duration = 1.2 + Math.random() * 1.8  // schneller: 1.2–3s statt 4–10s
       const delay    = -Math.random() * duration
       const col      = COLORS[i % COLORS.length]
       const opa      = OPAS[i]
