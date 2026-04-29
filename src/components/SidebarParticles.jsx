@@ -1,20 +1,22 @@
 import { useEffect, useRef } from 'react'
 
 const COLORS = [
-  'rgba(124,77,255,',
-  'rgba(200,200,200,',
-  'rgba(157,113,255,',
-  'rgba(180,180,180,',
-  'rgba(140,100,255,',
-  'rgba(220,220,220,',
+  'rgba(124,77,255,',   // brand purple
+  'rgba(157,113,255,',  // lighter purple
+  'rgba(180,130,255,',  // soft purple
+  'rgba(200,160,255,',  // very light purple
+  'rgba(100,60,220,',   // deep purple
+  'rgba(220,200,255,',  // near white purple
 ]
 
-const SIZES  = [2, 2.5, 1.5, 3, 2, 1.8, 2.2, 1.6, 2.8, 2, 1.5, 2.5, 2, 1.8, 3,
-                2.4, 1.6, 2, 2.2, 1.5, 2.8, 2, 1.8, 2.5, 1.6, 2, 2.2, 3]
+// Bigger particles for more visibility
+const SIZES  = [3, 4, 2.5, 5, 3, 2.8, 3.5, 2.5, 4.5, 3, 2.5, 4, 3, 2.8, 5,
+                3.5, 2.5, 3, 3.5, 2.5, 4.5, 3, 2.8, 4, 2.5, 3, 3.5, 5]
 
-const OPAS   = [0.5, 0.4, 0.6, 0.35, 0.55, 0.45, 0.5, 0.4, 0.6, 0.35,
-                0.55, 0.45, 0.5, 0.4, 0.5, 0.6, 0.4, 0.5, 0.35, 0.55,
-                0.45, 0.5, 0.4, 0.6, 0.5, 0.55, 0.4, 0.5]
+// Higher opacity for more prominence
+const OPAS   = [0.75, 0.65, 0.80, 0.55, 0.75, 0.65, 0.75, 0.60, 0.80, 0.55,
+                0.75, 0.65, 0.75, 0.60, 0.75, 0.80, 0.60, 0.75, 0.55, 0.75,
+                0.65, 0.75, 0.60, 0.80, 0.75, 0.75, 0.60, 0.75]
 
 export default function SidebarParticles() {
   const ref = useRef(null)
@@ -27,7 +29,7 @@ export default function SidebarParticles() {
       const dot      = document.createElement('span')
       const left     = 4 + Math.random() * 88
       const bottom   = Math.random() * 100
-      const duration = 1.2 + Math.random() * 1.8  // schneller: 1.2–3s statt 4–10s
+      const duration = 1.2 + Math.random() * 1.8
       const delay    = -Math.random() * duration
       const col      = COLORS[i % COLORS.length]
       const opa      = OPAS[i]
