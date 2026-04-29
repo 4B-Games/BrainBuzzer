@@ -2721,3 +2721,235 @@ html, body {
 .badge--admin { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
 .badge--user  { background: color-mix(in srgb, var(--success) 12%, transparent); color: var(--success); }
 .badge--off   { background: var(--surface2); color: var(--text-dim); }
+
+/* ════════════════════════════════════════════════════════════
+   ARCHIVE BUTTON (Einstellungen) – same style as mgmt-btn
+   ════════════════════════════════════════════════════════════ */
+.btn-icon-archive {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: all 0.12s;
+  flex-shrink: 0;
+}
+
+.btn-icon-archive:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-muted);
+}
+
+/* ════════════════════════════════════════════════════════════
+   CONFIRM DIALOG – elegant modal with clear hierarchy
+   ════════════════════════════════════════════════════════════ */
+.modal--sm { max-width: 440px; }
+
+.confirm-msg {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+  padding: 4px 0 8px;
+}
+
+.confirm-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  transition: background 0.12s, box-shadow 0.12s, filter 0.12s;
+}
+
+.confirm-action-btn--danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.confirm-action-btn--danger:hover {
+  filter: brightness(0.88);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+.confirm-action-btn--warning {
+  background: var(--accent);
+  color: #fff;
+}
+
+.confirm-action-btn--warning:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 14px var(--accent-muted);
+}
+
+/* ════════════════════════════════════════════════════════════
+   ARCHIV VIEW – restore + delete buttons
+   ════════════════════════════════════════════════════════════ */
+.archiv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 0;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.archiv-empty p { font-size: 16px; font-weight: 600; }
+.archiv-empty-sub { font-size: 13px; font-weight: 400 !important; opacity: 0.7; }
+
+.archiv-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+.archiv-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: box-shadow 0.12s;
+}
+
+.archiv-item:hover { box-shadow: var(--shadow); }
+
+.archiv-item-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.archiv-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.archiv-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.archiv-item-name { font-size: 14px; font-weight: 700; color: var(--text); }
+
+.archiv-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.archiv-item-projects {
+  font-size: 12px;
+  color: var(--text-dim);
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.archiv-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Restore button – green tinted */
+.archiv-restore-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: color-mix(in srgb, var(--success) 10%, var(--surface2));
+  border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border));
+  border-radius: var(--radius);
+  color: var(--success);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.archiv-restore-btn:hover {
+  background: color-mix(in srgb, var(--success) 18%, var(--surface2));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--success) 25%, transparent);
+}
+
+/* Delete icon button – same as mgmt-btn style */
+.archiv-delete-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: all 0.12s;
+}
+
+.archiv-delete-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface2));
+}
+
+/* Inline confirm inside archiv card */
+.archiv-confirm {
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--danger) 5%, var(--surface));
+  border-top: 1px solid color-mix(in srgb, var(--danger) 20%, var(--border));
+}
+
+.archiv-confirm-text {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.archiv-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.archiv-delete-final-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--danger);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.archiv-delete-final-btn:hover {
+  filter: brightness(0.88);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--danger) 40%, transparent);
+}
