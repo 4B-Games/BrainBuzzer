@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Download, ChevronDown, Users } from 'lucide-react'
-import { getEntries, getAllEntries, getCompanies, getActiveCompanies, deleteEntry } from '../services/dataService.js'
-import { getUsers } from '../services/authService.js'
+import { getEntries, getAllEntries, getCompanies, getActiveCompanies, deleteEntry } from '../services/dataService.supabase.js'
+import { getUsers } from '../services/authService.supabase.js'
 import { fmtDate, fmtTime, fmtDurationShort, fmtDateInput } from '../utils/format.js'
 import BarChart from '../components/BarChart.jsx'
 import EntryList from '../components/EntryList.jsx'
@@ -106,11 +106,15 @@ export default function ReportsView({ dataVersion, currentUser }) {
   const [editingEntry,    setEditingEntry]    = useState(null)
 
   const isAdmin    = currentUser?.role === 'admin'
-  const employees  = useMemo(() => isAdmin ? getUsers() : [], [isAdmin])
+  const [employees, setEmployees] = useState([])
+  useEffect(() => { if (isAdmin) getUsers().then(setEmployees) }, [isAdmin])
 
   useEffect(() => {
-    setEntries(isAdmin ? getAllEntries() : getEntries())
-    setCompanies(getCompanies())              // all (incl. archived) for display
+    async function load() {
+      setEntries(isAdmin ? await getAllEntries() : await getEntries())
+      setCompanies(await getCompanies())
+    }
+    load()
   }, [dataVersion, isAdmin])
 
   // Reset project filter when company changes
@@ -154,18 +158,18 @@ export default function ReportsView({ dataVersion, currentUser }) {
   const avgPerDay  = totalDays > 0 ? totalSec / totalDays : 0
   const topCo      = chartData[0]?.label ?? '—'
 
-  function handleDelete(id) {
-    deleteEntry(id)
+  async function handleDelete(id) {
+    await deleteEntry(id)
     setEntries(isAdmin ? getAllEntries() : getEntries())
   }
 
-  function handleEditSaved() {
-    setEntries(isAdmin ? getAllEntries() : getEntries())
+  async function handleEditSaved() {
+    setEntries(isAdmin ? await getAllEntries() : await getEntries())
   }
 
   function handleCsvExport() {
     const companyMap = Object.fromEntries(companies.map(c => [c.id, c]))
-    const userMap    = Object.fromEntries(getUsers().map(u => [u.id, u]))
+    const userMap    = Object.fromEntries(employees.map(u => [u.id, u]))
     const rows = [['Datum','Mitarbeiter','Unternehmen','Projekt','Von','Bis','Dauer (h)','Notiz']]
     filtered.forEach(e => {
       const co = companyMap[e.companyId]

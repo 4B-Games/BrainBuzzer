@@ -1,17 +1,11 @@
 /**
- * Supabase data implementation – drop-in replacement for dataService.js
- *
- * To switch: change all imports of './dataService' → './dataService.supabase'
- *
- * Key differences vs localStorage version:
- *  - All functions are async (add `await` at call sites)
- *  - RLS in Supabase handles user-scoping automatically
- *  - `getAllEntries()` requires the caller to have admin role (enforced via RLS)
+ * Supabase data implementation – aktive Implementierung (ersetzt dataService.js)
+ * Alle Funktionen sind async.
  */
 import { supabase } from './supabaseClient.js'
+import { getCachedUser } from './authService.supabase.js'
 
-// ── Column name mapping ───────────────────────────────────────────
-// DB uses snake_case; app uses camelCase
+// ── Mappers ───────────────────────────────────────────────────────
 
 function mapEntry(row) {
   if (!row) return null
@@ -45,20 +39,15 @@ function mapCompany(row) {
 // ── Companies ─────────────────────────────────────────────────────
 
 export async function getCompanies() {
-  const { data, error } = await supabase
-    .from('companies')
-    .select('*, projects(*)')
-    .order('name')
+  const { data, error } = await supabase.from('companies').select('*, projects(*)').order('name')
   if (error) throw error
   return (data ?? []).map(mapCompany)
 }
 
 export async function getActiveCompanies() {
   const { data, error } = await supabase
-    .from('companies')
-    .select('*, projects(*)')
-    .eq('archived', false)
-    .order('name')
+    .from('companies').select('*, projects(*)')
+    .eq('archived', false).order('name')
   if (error) throw error
   return (data ?? []).map(c => ({
     ...mapCompany(c),
@@ -66,10 +55,18 @@ export async function getActiveCompanies() {
   }))
 }
 
-export async function saveCompanies(companies) {
-  // Upsert all companies (used in SettingsView)
-  const rows = companies.map(c => ({ id: c.id, name: c.name, color: c.color, archived: c.archived ?? false }))
-  const { error } = await supabase.from('companies').upsert(rows)
+export async function addCompany({ id, name, color }) {
+  const { error } = await supabase.from('companies').insert({ id, name, color, archived: false })
+  if (error) throw error
+}
+
+export async function addProject(companyId, { id, name, emoji }) {
+  const { error } = await supabase.from('projects').insert({ id, company_id: companyId, name, emoji: emoji || null, archived: false })
+  if (error) throw error
+}
+
+export async function updateCompanyColor(id, color) {
+  const { error } = await supabase.from('companies').update({ color }).eq('id', id)
   if (error) throw error
 }
 
@@ -94,7 +91,6 @@ export async function unarchiveProject(companyId, projectId) {
 }
 
 export async function permanentlyDeleteCompany(id) {
-  // RLS will enforce authorization; FK constraints handle cascade
   await supabase.from('time_entries').update({ company_id: null, project_id: null }).eq('company_id', id)
   await supabase.from('projects').delete().eq('company_id', id)
   const { error } = await supabase.from('companies').delete().eq('id', id)
@@ -119,30 +115,23 @@ export async function countEntriesForProject(projectId) {
 
 // ── Entries ────────────────────────────────────────────────────────
 
-/** Current user's entries only (RLS enforces this automatically) */
 export async function getEntries() {
-  const { data, error } = await supabase
-    .from('time_entries')
-    .select('*')
-    .order('started_at', { ascending: false })
+  const { data, error } = await supabase.from('time_entries').select('*').order('started_at', { ascending: false })
   if (error) throw error
   return (data ?? []).map(mapEntry)
 }
 
-/** Admin: all users' entries */
 export async function getAllEntries() {
-  const { data, error } = await supabase
-    .from('time_entries')
-    .select('*')
-    .order('started_at', { ascending: false })
+  const { data, error } = await supabase.from('time_entries').select('*').order('started_at', { ascending: false })
   if (error) throw error
   return (data ?? []).map(mapEntry)
 }
 
 export async function addEntry(entry) {
+  const user = getCachedUser()
   const row = {
     id:               entry.id,
-    user_id:          entry.userId,
+    user_id:          entry.userId ?? user?.id,
     company_id:       entry.companyId,
     project_id:       entry.projectId ?? null,
     started_at:       entry.start,
@@ -168,6 +157,7 @@ export async function updateEntry(id, changes) {
   if (changes.companyId  !== undefined) row.company_id       = changes.companyId
   if (changes.projectId  !== undefined) row.project_id       = changes.projectId
   if (changes.note       !== undefined) row.note             = changes.note
+  if (changes.userId     !== undefined) row.user_id          = changes.userId
   const { error } = await supabase.from('time_entries').update(row).eq('id', id)
   if (error) throw error
 }
@@ -182,7 +172,7 @@ export async function getTemplates(userId) {
 
 export async function saveTemplate({ userId, companyId, projectId }) {
   const { error } = await supabase.from('templates').insert({ user_id: userId, company_id: companyId, project_id: projectId ?? null })
-  if (error) throw error
+  if (error && !error.message.includes('duplicate')) throw error
 }
 
 export async function deleteTemplate(id) {

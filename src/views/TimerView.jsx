@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Play, PlusCircle, Star, X } from 'lucide-react'
-import { getActiveCompanies, getEntries, updateEntry, deleteEntry } from '../services/dataService.js'
-import { getCurrentUser } from '../services/authService.js'
+import { getActiveCompanies, getEntries, updateEntry, deleteEntry } from '../services/dataService.supabase.js'
+import { getCachedUser } from '../services/authService.supabase.js'
 import { getTemplates, saveTemplate, deleteTemplate } from '../services/templateService.js'
 import { fmtDuration, isToday } from '../utils/format.js'
 import TileGrid from '../components/TileGrid.jsx'
@@ -24,7 +24,7 @@ export default function TimerView({
   const [prefilledTimes,    setPrefilledTimes]     = useState(null)
   const [tlVersion,         setTlVersion]          = useState(0)
 
-  const user = getCurrentUser()
+  const user = getCachedUser()
 
   function loadData() {
     const cos = getActiveCompanies()
@@ -89,10 +89,10 @@ export default function TimerView({
     })
   }
 
-  function handleSaveTemplate() {
+  async function handleSaveTemplate() {
     if (!selectedCompanyId || !user) return
-    saveTemplate({ userId: user.id, companyId: selectedCompanyId, projectId: selectedProjectId ?? null })
-    setTemplates(getTemplates(user.id))
+    await saveTemplate({ userId: user.id, companyId: selectedCompanyId, projectId: selectedProjectId ?? null })
+    getTemplates(getCachedUser()?.id).then(t => setTemplates(t || []))
   }
 
   function handleDeleteTemplate(id) {
@@ -104,7 +104,7 @@ export default function TimerView({
     updateEntry(entryId, { start: newStart, end: newEnd, duration: Math.floor((new Date(newEnd) - new Date(newStart)) / 1000) })
     setTlVersion(v => v + 1); onDataChange()
   }
-  function handleBlockDelete(entryId) { deleteEntry(entryId); setTlVersion(v => v + 1); onDataChange() }
+  async function handleBlockDelete(entryId) { await deleteEntry(entryId); setTlVersion(v => v + 1); onDataChange() }
   function handleBlockUpdate(entryId, { companyId, projectId }) {
     updateEntry(entryId, { companyId, projectId: projectId ?? null })
     setTlVersion(v => v + 1); onDataChange()

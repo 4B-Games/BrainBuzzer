@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PlusCircle, ChevronDown, ChevronRight, Archive } from 'lucide-react'
-import { getActiveCompanies, saveCompanies, getCompanies, archiveCompany, archiveProject } from '../services/dataService.js'
+import { getActiveCompanies, addCompany as _addCo, addProject as _addPr, updateCompanyColor as _updColor, archiveCompany, archiveProject } from '../services/dataService.supabase.js'
 import { uid } from '../utils/format.js'
 import EmojiPicker from '../components/EmojiPicker.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
@@ -16,37 +16,35 @@ export default function SettingsView({ onDataChange, currentUser }) {
   const [newProjectEmojis, setNewProjectEmojis] = useState({})
   const [confirmDialog,    setConfirmDialog]    = useState(null)
 
-  function load() { setCompanies(getActiveCompanies()) }
+  async function load() { setCompanies(await getActiveCompanies()) }
   useEffect(() => { load() }, [])
 
-  function addCompany() {
+  async function addCompany() {
     const name = newCompanyName.trim()
     if (!name) return
-    saveCompanies([...getCompanies(), { id: uid(), name, color: newCompanyColor, projects: [] }])
+    await _addCo({ id: uid(), name, color: newCompanyColor })
     setNewCompanyName(''); setNewCompanyColor('#6366f1')
     load(); onDataChange()
   }
 
-  function updateCompanyColor(id, color) {
-    saveCompanies(getCompanies().map(c => c.id === id ? { ...c, color } : c))
+  async function updateCompanyColor(id, color) {
+    await _updColor(id, color)
     load(); onDataChange()
   }
 
-  function doArchiveCompany(id) {
-    archiveCompany(id); setConfirmDialog(null); load(); onDataChange()
+  async function doArchiveCompany(id) {
+    await archiveCompany(id); setConfirmDialog(null); load(); onDataChange()
   }
 
-  function doArchiveProject(companyId, projectId) {
-    archiveProject(companyId, projectId); setConfirmDialog(null); load(); onDataChange()
+  async function doArchiveProject(companyId, projectId) {
+    await archiveProject(companyId, projectId); setConfirmDialog(null); load(); onDataChange()
   }
 
-  function addProject(companyId) {
+  async function addProject(companyId) {
     const name = (newProjectNames[companyId] ?? '').trim()
     if (!name) return
     const emoji = newProjectEmojis[companyId] ?? ''
-    saveCompanies(getCompanies().map(c =>
-      c.id === companyId ? { ...c, projects: [...c.projects, { id: uid(), name, emoji }] } : c
-    ))
+    await _addPr(companyId, { id: uid(), name, emoji })
     setNewProjectNames(prev => ({ ...prev, [companyId]: '' }))
     setNewProjectEmojis(prev => ({ ...prev, [companyId]: '' }))
     load(); onDataChange()

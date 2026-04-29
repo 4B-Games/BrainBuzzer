@@ -1,5 +1,5 @@
 import { defaultCompanies, seedDefaultEntries } from '../utils/defaults.js'
-import { getCurrentUser } from './authService.js'
+import { getCurrentUser } from './authService.supabase.js'
 
 const KEYS = {
   companies: 'bb_companies',

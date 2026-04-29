@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { fmtDateInput, fmtTimeInput } from '../utils/format.js'
-import { updateEntry } from '../services/dataService.js'
-import { getUsers } from '../services/authService.js'
+import { updateEntry } from '../services/dataService.supabase.js'
+import { getUsers } from '../services/authService.supabase.js'
 import TimeInput from './TimeInput.jsx'
 
 export default function EditEntryModal({ entry, companies, isAdmin, onClose, onSaved }) {
@@ -15,19 +15,20 @@ export default function EditEntryModal({ entry, companies, isAdmin, onClose, onS
   const [note,      setNote]      = useState(entry.note ?? '')
   const [error,     setError]     = useState('')
 
-  const users = isAdmin ? getUsers() : []
+  const [users, setUsers] = useState([])
+  useEffect(() => { if (isAdmin) getUsers().then(setUsers) }, [isAdmin])
   const selectedCompany = companies.find(c => c.id === companyId)
 
   function handleCompanyChange(id) { setCompanyId(id); setProjectId('') }
 
-  function handleSave() {
+  async function handleSave() {
     if (!companyId) { setError('Bitte ein Unternehmen wählen.'); return }
     const start = new Date(`${date}T${timeFrom}`)
     const end   = new Date(`${date}T${timeTo}`)
     if (isNaN(start) || isNaN(end)) { setError('Ungültige Zeitangaben.'); return }
     if (end <= start) { setError('"Bis" muss nach "Von" liegen.'); return }
 
-    updateEntry(entry.id, {
+    await updateEntry(entry.id, {
       userId:    userId || entry.userId,
       companyId,
       projectId: projectId || null,

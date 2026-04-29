@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { getEntries, getCompanies, deleteEntry } from '../services/dataService.js'
+import { getEntries, getCompanies, deleteEntry } from '../services/dataService.supabase.js'
 import { fmtDurationShort, fmtDateInput, fmtTime } from '../utils/format.js'
 import EntryList from '../components/EntryList.jsx'
 import EditEntryModal from '../components/EditEntryModal.jsx'
@@ -59,8 +59,11 @@ export default function EntriesView({ dataVersion, onDataChange, liveEntry }) {
   const [editingEntry, setEditingEntry] = useState(null)
 
   useEffect(() => {
-    setEntries(getEntries())
-    setCompanies(getCompanies())
+    async function load() {
+      setEntries(await getEntries())
+      setCompanies(await getCompanies())
+    }
+    load()
   }, [dataVersion])
 
   const weekEntries = useMemo(() => {
@@ -86,7 +89,7 @@ export default function EntriesView({ dataVersion, onDataChange, liveEntry }) {
     return Object.entries(map).sort(([a], [b]) => b.localeCompare(a))
   }, [weekEntries])
 
-  function handleDelete(id) { deleteEntry(id); onDataChange() }
+  async function handleDelete(id) { await deleteEntry(id); onDataChange() }
 
   const todayStr = fmtDateInput(new Date())
 

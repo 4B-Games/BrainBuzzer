@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PlusCircle, Pencil, Trash2, UserCheck, UserX, KeyRound } from 'lucide-react'
-import { getUsers, updateUser, deleteUser, getCurrentUser } from '../services/authService.js'
-import { getAllEntries } from '../services/dataService.js'
+import { getUsers, updateUser, deleteUser, getCachedUser } from '../services/authService.supabase.js'
+import { getAllEntries } from '../services/dataService.supabase.js'
 import { fmtDate, fmtDurationShort } from '../utils/format.js'
 import UserModal from './UserModal.jsx'
 import ConfirmDialog from './ConfirmDialog.jsx'
@@ -32,11 +32,11 @@ export default function TeamManagement({ dataVersion }) {
   const [resetPwUser,    setResetPwUser]    = useState(null)
   const [newPw,          setNewPw]          = useState('')
   const [pwMsg,          setPwMsg]          = useState('')
-  const me = getCurrentUser()
+  const me = getCachedUser()
 
-  function refresh() {
-    setUsers(getUsers())
-    setAllEntries(getAllEntries())
+  async function refresh() {
+    setUsers(await getUsers())
+    setAllEntries(await getAllEntries())
   }
 
   useEffect(() => { refresh() }, [dataVersion])

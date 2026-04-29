@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ChevronDown, ChevronRight, Download, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
-import { getAllEntries, getCompanies } from '../services/dataService.js'
-import { getUsers } from '../services/authService.js'
+import { getAllEntries, getCompanies } from '../services/dataService.supabase.js'
+import { getUsers } from '../services/authService.supabase.js'
 import { fmtDurationShort, fmtDate, fmtDateInput, fmtTime } from '../utils/format.js'
 import TeamManagement from '../components/TeamManagement.jsx'
 
@@ -49,12 +49,16 @@ function TeamOverview({ dataVersion }) {
   const [sortBy,    setSortBy]    = useState('hours')
   const [sortDir,   setSortDir]   = useState('desc')
 
-  const employees  = useMemo(() => getUsers().filter(u => u.role !== 'admin'), [])
+  const [employees, setEmployees] = useState([])
+  useEffect(() => { getUsers().then(us => setEmployees(us.filter(u => u.role !== 'admin'))) }, [])
   const companyMap = useMemo(() => Object.fromEntries(companies.map(c => [c.id, c])), [companies])
 
   useEffect(() => {
-    setEntries(getAllEntries())
-    setCompanies(getCompanies())
+    async function load() {
+      setEntries(await getAllEntries())
+      setCompanies(await getCompanies())
+    }
+    load()
   }, [dataVersion])
 
   const rangeEntries = useMemo(() => {

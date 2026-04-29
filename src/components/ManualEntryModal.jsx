@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { uid, fmtDateInput, fmtTimeInput } from '../utils/format.js'
-import { addEntry, getActiveCompanies } from '../services/dataService.js'
-import { getCurrentUser } from '../services/authService.js'
+import { addEntry, getActiveCompanies } from '../services/dataService.supabase.js'
+import { getCachedUser } from '../services/authService.supabase.js'
 import TimeInput from './TimeInput.jsx'
 
 function roundTo5Min(date) {
@@ -30,15 +30,15 @@ export default function ManualEntryModal({ companies, onClose, onSaved, prefille
 
   function handleCompanyChange(id) { setCompanyId(id); setProjectId('') }
 
-  function handleSave() {
+  async function handleSave() {
     if (!companyId) { setError('Bitte ein Unternehmen wählen.'); return }
     const start = new Date(`${date}T${timeFrom}`)
     const end   = new Date(`${date}T${timeTo}`)
     if (isNaN(start) || isNaN(end)) { setError('Ungültige Zeitangaben.'); return }
     if (end <= start) { setError('"Bis" muss nach "Von" liegen.'); return }
 
-    const user = getCurrentUser()
-    addEntry({
+    const user = getCachedUser()
+    await addEntry({
       id: uid(),
       userId: user?.id ?? 'unknown',
       companyId,

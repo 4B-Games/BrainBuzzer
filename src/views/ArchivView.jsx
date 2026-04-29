@@ -5,14 +5,14 @@ import {
   unarchiveCompany, unarchiveProject,
   permanentlyDeleteCompany, permanentlyDeleteProject,
   countEntriesForCompany, countEntriesForProject,
-} from '../services/dataService.js'
+} from '../services/dataService.supabase.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 
 export default function ArchivView({ onDataChange }) {
   const [companies,     setCompanies]     = useState([])
   const [confirmDialog, setConfirmDialog] = useState(null)
 
-  function load() { setCompanies(getCompanies()) }
+  async function load() { setCompanies(await getCompanies()) }
   useEffect(() => { load() }, [])
 
   const archivedCompanies = useMemo(() => companies.filter(c => c.archived), [companies])
@@ -24,28 +24,28 @@ export default function ArchivView({ onDataChange }) {
     [companies]
   )
 
-  function handleUnarchiveCompany(company) {
+  async function handleUnarchiveCompany(company) {
     setConfirmDialog({
       title: 'Unternehmen wiederherstellen',
       message: `„${company.name}" wird aus dem Archiv geholt und erscheint wieder in der aktiven Auswahl beim Erfassen von Zeiten.`,
       confirmLabel: 'Wiederherstellen',
       variant: 'warning',
-      onConfirm: () => { unarchiveCompany(company.id); setConfirmDialog(null); load(); onDataChange() },
+      onConfirm: async () => { await unarchiveCompany(company.id); setConfirmDialog(null); load(); onDataChange() },
     })
   }
 
-  function handleUnarchiveProject(project) {
+  async function handleUnarchiveProject(project) {
     setConfirmDialog({
       title: 'Projekt wiederherstellen',
       message: `„${project.emoji ? project.emoji + ' ' : ''}${project.name}" wird wiederhergestellt und erscheint wieder in der aktiven Projektauswahl unter „${project.company.name}".`,
       confirmLabel: 'Wiederherstellen',
       variant: 'warning',
-      onConfirm: () => { unarchiveProject(project.company.id, project.id); setConfirmDialog(null); load(); onDataChange() },
+      onConfirm: async () => { await unarchiveProject(project.company.id, project.id); setConfirmDialog(null); load(); onDataChange() },
     })
   }
 
-  function handleDeleteCompany(company) {
-    const count = countEntriesForCompany(company.id)
+  async function handleDeleteCompany(company) {
+    const count = await countEntriesForCompany(company.id)
     const entryText = count > 0
       ? ` ${count} ${count === 1 ? 'Zeiteintrag verliert' : 'Zeiteinträge verlieren'} die Unternehmenszuordnung – die Einträge selbst bleiben erhalten.`
       : ' Es sind keine Zeiteinträge mit diesem Unternehmen verknüpft.'
@@ -54,12 +54,12 @@ export default function ArchivView({ onDataChange }) {
       message: `„${company.name}" wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.${entryText}`,
       confirmLabel: 'Endgültig löschen',
       variant: 'danger',
-      onConfirm: () => { permanentlyDeleteCompany(company.id); setConfirmDialog(null); load(); onDataChange() },
+      onConfirm: async () => { await permanentlyDeleteCompany(company.id); setConfirmDialog(null); load(); onDataChange() },
     })
   }
 
-  function handleDeleteProject(project) {
-    const count = countEntriesForProject(project.id)
+  async function handleDeleteProject(project) {
+    const count = await countEntriesForProject(project.id)
     const entryText = count > 0
       ? ` ${count} ${count === 1 ? 'Zeiteintrag verliert' : 'Zeiteinträge verlieren'} die Projektzuordnung – die Einträge selbst bleiben erhalten.`
       : ' Es sind keine Zeiteinträge mit diesem Projekt verknüpft.'
@@ -68,7 +68,7 @@ export default function ArchivView({ onDataChange }) {
       message: `„${project.emoji ? project.emoji + ' ' : ''}${project.name}" wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.${entryText}`,
       confirmLabel: 'Endgültig löschen',
       variant: 'danger',
-      onConfirm: () => { permanentlyDeleteProject(project.company.id, project.id); setConfirmDialog(null); load(); onDataChange() },
+      onConfirm: async () => { await permanentlyDeleteProject(project.company.id, project.id); setConfirmDialog(null); load(); onDataChange() },
     })
   }
 
@@ -95,7 +95,7 @@ export default function ArchivView({ onDataChange }) {
           <h2 className="section-title">Archivierte Unternehmen</h2>
           <ul className="archiv-list">
             {archivedCompanies.map(c => {
-              const ec = countEntriesForCompany(c.id)
+              const ec = 0
               return (
                 <li key={c.id} className="archiv-item">
                   <div className="archiv-item-header">
@@ -135,7 +135,7 @@ export default function ArchivView({ onDataChange }) {
           <h2 className="section-title">Archivierte Projekte</h2>
           <ul className="archiv-list">
             {archivedProjects.map(p => {
-              const ep = countEntriesForProject(p.id)
+              const ep = 0
               return (
                 <li key={p.id} className="archiv-item">
                   <div className="archiv-item-header">

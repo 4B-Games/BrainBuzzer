@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Trash2, Pencil } from 'lucide-react'
 import { fmtTime, fmtDurationShort } from '../utils/format.js'
-import { getUsers } from '../services/authService.js'
+import { getUsers } from '../services/authService.supabase.js'
 import ConfirmDialog from './ConfirmDialog.jsx'
 
 export default function EntryList({ entries, companies, onDelete, onEdit, showUser = false }) {
-  const [pendingDelete, setPendingDelete] = useState(null) // entry object
-
+  const [pendingDelete, setPendingDelete] = useState(null)
+  const [users, setUsers] = useState([])
+  useEffect(() => { getUsers().then(setUsers) }, [])
   const companyMap = Object.fromEntries(companies.map(c => [c.id, c]))
-  const userMap    = Object.fromEntries(getUsers().map(u => [u.id, u]))
+  const userMap    = Object.fromEntries(users.map(u => [u.id, u]))
 
   if (entries.length === 0) {
     return <p className="entry-list-empty">Keine Einträge vorhanden.</p>

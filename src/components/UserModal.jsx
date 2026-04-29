@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { X, Eye, EyeOff } from 'lucide-react'
-import { addUser, updateUser, getUsers } from '../services/authService.js'
+import { addUser, updateUser, getUsers } from '../services/authService.supabase.js'
 
 const DEFAULT_COLORS = [
   '#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6',
@@ -21,7 +21,7 @@ export default function UserModal({ user, onClose, onSaved }) {
   const [showPw,       setShowPw]       = useState(false)
   const [error,        setError]        = useState('')
 
-  function handleSave() {
+  async function handleSave() {
     const n = name.trim()
     const e = email.trim().toLowerCase()
     if (!n) { setError('Name ist erforderlich.'); return }
@@ -37,8 +37,8 @@ export default function UserModal({ user, onClose, onSaved }) {
     }
     if (password) data.password = password
 
-    if (isEdit) updateUser(user.id, data)
-    else        addUser(data)
+    if (isEdit) await updateUser(user.id, data)
+    else        await addUser(data)
 
     onSaved()
     onClose()

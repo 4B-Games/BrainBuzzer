@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { getEntries, getCompanies, getActiveCompanies, deleteEntry, updateEntry } from '../services/dataService.js'
+import { getEntries, getCompanies, getActiveCompanies, deleteEntry, updateEntry } from '../services/dataService.supabase.js'
 // updateEntry used for block move, delete, and inline company/project edits
 import { fmtDurationShort } from '../utils/format.js'
 import Timeline from '../components/Timeline.jsx'
@@ -20,9 +20,12 @@ export default function TodayView({ dataVersion, onDataChange }) {
   const [editingEntry,     setEditingEntry]     = useState(null)
 
   useEffect(() => {
-    setEntries(getEntries())
-    setCompanies(getCompanies())
-    setActiveCompanies(getActiveCompanies())
+    async function load() {
+      setEntries(await getEntries())
+      setCompanies(await getCompanies())
+      setActiveCompanies(await getActiveCompanies())
+    }
+    load()
   }, [dataVersion])
 
   const todayEntries = useMemo(
@@ -32,17 +35,17 @@ export default function TodayView({ dataVersion, onDataChange }) {
 
   const totalSeconds = useMemo(() => todayEntries.reduce((s, e) => s + e.duration, 0), [todayEntries])
 
-  function handleDelete(id) { deleteEntry(id); onDataChange() }
+  async function handleDelete(id) { await deleteEntry(id); onDataChange() }
 
-  function handleBlockMove(entryId, newStart, newEnd) {
-    updateEntry(entryId, { start: newStart, end: newEnd, duration: Math.floor((new Date(newEnd) - new Date(newStart)) / 1000) })
+  async function handleBlockMove(entryId, newStart, newEnd) {
+    await updateEntry(entryId, { start: newStart, end: newEnd, duration: Math.floor((new Date(newEnd) - new Date(newStart)) / 1000) })
     onDataChange()
   }
 
-  function handleBlockDelete(entryId) { deleteEntry(entryId); onDataChange() }
+  async function handleBlockDelete(entryId) { await deleteEntry(entryId); onDataChange() }
 
-  function handleBlockUpdate(entryId, { companyId, projectId }) {
-    updateEntry(entryId, { companyId, projectId: projectId ?? null })
+  async function handleBlockUpdate(entryId), { companyId, projectId }) {
+    await updateEntry(entryId, { companyId, projectId: projectId ?? null })
     onDataChange()
   }
 
