@@ -43,6 +43,43 @@ const CATEGORIES = [
 // Build a flat searchable list: { emoji, keywords }
 const ALL_EMOJIS = CATEGORIES.flatMap(c => c.emojis)
 
+// Keyword map for search – German + English terms
+const EMOJI_KEYWORDS = {
+  '😀':'lachen smiley happy glücklich',   '😊':'lächeln smile',    '😂':'tränen lachen crying laughing',
+  '❤️':'herz liebe love heart',           '🧡':'orange herz',      '💛':'gelb herz yellow',
+  '💚':'grün herz green',                 '💙':'blau herz blue',   '💜':'lila herz purple',
+  '🖥️':'computer bildschirm desktop',     '💻':'laptop notebook',  '📱':'handy phone smartphone',
+  '⌨️':'tastatur keyboard',               '🖱️':'maus mouse',      '🖨️':'drucker printer',
+  '📊':'diagramm chart statistik',        '📈':'wachstum chart',   '📉':'rückgang chart',
+  '📋':'klemmbrett clipboard liste list', '📝':'notiz notizen note','✏️':'stift pencil schreiben',
+  '🔧':'schraubenzieher werkzeug tool',   '🛠️':'werkzeug tools',  '⚙️':'einstellungen settings zahnrad',
+  '📅':'kalender calendar datum',         '🗓️':'kalender planer', '⏰':'uhr alarm clock zeit',
+  '💡':'idee idea glühbirne lamp',        '🔍':'suche search lupe','🔎':'suche search',
+  '📦':'paket box lieferung package',     '📁':'ordner folder',    '🗂️':'ordner folder',
+  '✅':'haken check fertig done ok',       '❌':'kreuz fehler error','⚠️':'warnung warning',
+  '🎯':'ziel target goal treffer',        '🚀':'rakete start rocket launch',
+  '🏆':'pokal trophy gewinner winner',    '🥇':'gold erster first','🎖️':'medaille medal',
+  '💼':'koffer tasche business job arbeit','👔':'hemd shirt business',
+  '🤝':'handshake partner meeting',       '👋':'hallo hello hi winken',
+  '💰':'geld money euro dollar',          '💳':'kreditkarte card payment',
+  '🏠':'haus home zuhause',               '🏢':'büro office gebäude building',
+  '✈️':'flugzeug fliegen reise travel',   '🚗':'auto car fahren',  '🚂':'zug train bahn',
+  '🎨':'design kunst art farbe',          '🎬':'film video kamera',
+  '🎵':'musik music note',               '🎸':'gitarre guitar',   '🥁':'schlagzeug drum',
+  '📚':'bücher books lesen learning',     '📖':'buch book lesen',  '🎓':'abschluss graduation',
+  '🔬':'labor forschung science',         '🧪':'labor test',       '🧬':'dna bio',
+  '🍎':'apfel apple obst',               '☕':'kaffee coffee',     '🍕':'pizza essen food',
+  '⭐':'stern star favorit',             '🌟':'glanz star',       '✨':'glitzer sparkle',
+  '🔴':'rot red kreis',                  '🟡':'gelb yellow',      '🟢':'grün green',
+  '🔵':'blau blue',                       '🟣':'lila purple',
+  '👨':'mann man person',                '👩':'frau woman person', '👥':'team gruppe group',
+  '📢':'lautsprecher announcement',       '📣':'megafon megaphone', '🔔':'glocke bell',
+}
+// Build lookup from string to array
+Object.keys(EMOJI_KEYWORDS).forEach(k => {
+  EMOJI_KEYWORDS[k] = EMOJI_KEYWORDS[k].split(' ')
+})
+
 export default function EmojiPicker({ value, onChange }) {
   const [open, setOpen] = useState(false)
   const [activeCat, setActiveCat] = useState('smileys')
@@ -99,16 +136,16 @@ export default function EmojiPicker({ value, onChange }) {
     onChange('')
   }
 
-  const displayEmojis = search.trim()
-    ? ALL_EMOJIS.filter((_, i) => {
-        // Simple: filter by position in string representation or just show all
-        // Without a name database, show all emojis when searching (user scrolls visually)
-        return true
-      }).slice(0, 200)
+  // Real search: filter by category name or per-emoji keywords
+  const q = search.trim().toLowerCase()
+  const gridEmojis = q
+    ? CATEGORIES.flatMap(cat =>
+        cat.emojis.filter(e =>
+          cat.label.toLowerCase().includes(q) ||
+          (EMOJI_KEYWORDS[e] ?? []).some(kw => kw.includes(q))
+        )
+      ).filter((e, i, arr) => arr.indexOf(e) === i)
     : (CATEGORIES.find(c => c.id === activeCat)?.emojis ?? [])
-
-  // When searching, just show all emojis (visual search)
-  const gridEmojis = search.trim() ? ALL_EMOJIS : displayEmojis
 
   return (
     <div className="emoji-picker-root">
@@ -164,8 +201,8 @@ export default function EmojiPicker({ value, onChange }) {
             </div>
           )}
 
-          {search.trim() && (
-            <p className="emoji-search-hint">Scrolle durch alle {ALL_EMOJIS.length} Emojis</p>
+          {search.trim() && gridEmojis.length === 0 && (
+            <p className="emoji-search-hint">Keine Treffer für „{search}"</p>
           )}
 
           {/* Emoji grid */}

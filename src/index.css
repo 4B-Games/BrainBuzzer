@@ -36,7 +36,7 @@
   --sidebar-surface:  #c9c4bb;
   --sidebar-border:   #b8b3aa;
   --sidebar-text:     #18161f;
-  --sidebar-text-dim: #6b6660;
+  --sidebar-text-dim: #3d3830;
   --sidebar-active:   rgba(124, 77, 255, 0.14);
 }
 
@@ -62,7 +62,7 @@
   --sidebar-surface:  #1e1e1e;
   --sidebar-border:   #333333;
   --sidebar-text:     #eeeeee;
-  --sidebar-text-dim: #777777;
+  --sidebar-text-dim: #aaaaaa;
   --sidebar-active:   rgba(157, 113, 255, 0.18);
 }
 
