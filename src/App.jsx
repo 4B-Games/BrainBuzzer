@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { logout, getCurrentUser, getCachedUser } from './services/authService.supabase.js'
-import { addEntry } from './services/dataService.supabase.js'
+import { addEntry, getEntries } from './services/dataService.supabase.js'
 import { supabase } from './services/supabaseClient.js'
 import { useTimer } from './hooks/useTimer.js'
 import { useKeyboardShortcuts, SHORTCUTS } from './hooks/useKeyboardShortcuts.js'
@@ -15,72 +15,118 @@ import SettingsView from './views/SettingsView.jsx'
 import TeamView from './views/TeamView.jsx'
 import ArchivView from './views/ArchivView.jsx'
 
-const TWO_HOURS_MS = 2 * 60 * 60 * 1000
+const TWO_HOURS_MS   = 2 * 60 * 60 * 1000
+const TIMER_SAVE_KEY = 'bb_active_timer'
 
 export default function App() {
-  const [theme,          setTheme]          = useState(() => localStorage.getItem('bb_theme') || 'dark')
-  const [currentUser,    setCurrentUser]    = useState(null)
-  const [authLoading,    setAuthLoading]    = useState(true)
-  const [page,           setPage]           = useState('timer')
-  const [activeEntry,    setActiveEntry]    = useState(null)
-  const [timerCtx,       setTimerCtx]       = useState(null)
-  const [dataVersion,    setDataVersion]    = useState(0)
+  const [theme,            setTheme]            = useState(() => localStorage.getItem('bb_theme') || 'dark')
+  const [currentUser,      setCurrentUser]      = useState(null)
+  const [authLoading,      setAuthLoading]      = useState(true)
+  const [page,             setPage]             = useState('timer')
+  const [activeEntry,      setActiveEntry]      = useState(null)
+  const [timerCtx,         setTimerCtx]         = useState(null)
+  const [dataVersion,      setDataVersion]      = useState(0)
   const [showShortcutHelp, setShowShortcutHelp] = useState(false)
+  const [weeklyProgress,   setWeeklyProgress]   = useState(null)
   const notifRef = useRef(null)
 
-  const { running, elapsed, start, stop, reset } = useTimer()
+  const { running, paused, elapsed, start, pause, resume, stop, reset, restoreFrom } = useTimer()
 
-  // ── Auth: Supabase session handling ──────────────────────────
+  // ── Auth ──────────────────────────────────────────────────────
   useEffect(() => {
-    if (!supabase) {
-      console.error('Supabase client nicht initialisiert – .env-Variablen prüfen')
-      setAuthLoading(false)
-      return
-    }
+    if (!supabase) { setAuthLoading(false); return }
 
     supabase.auth.getSession()
       .then(async ({ data: { session } }) => {
         if (session?.user) {
           const user = await getCurrentUser()
           setCurrentUser(user)
+          restoreTimer()
+          loadWeeklyProgress(user)
         }
         setAuthLoading(false)
       })
-      .catch(err => {
-        console.error('Supabase getSession Fehler:', err)
-        setAuthLoading(false)
-      })
+      .catch(err => { console.error('Supabase auth error:', err); setAuthLoading(false) })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const user = await getCurrentUser()
         setCurrentUser(user)
+        restoreTimer()
+        loadWeeklyProgress(user)
       } else if (event === 'SIGNED_OUT') {
         setCurrentUser(null)
       }
     })
-
     return () => subscription.unsubscribe()
   }, [])
 
-  useEffect(() => {
-    if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark')
-    else document.documentElement.removeAttribute('data-theme')
-    localStorage.setItem('bb_theme', theme)
-  }, [theme])
-
+  // Keep elapsed in sync with activeEntry
   useEffect(() => {
     if (running && activeEntry) setActiveEntry(prev => prev ? { ...prev, elapsed } : null)
-  }, [elapsed, running]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [elapsed, running])
+
+  // Reload weekly progress on data change
+  useEffect(() => {
+    if (currentUser) loadWeeklyProgress(currentUser)
+  }, [dataVersion])
+
+  // ── Weekly progress ───────────────────────────────────────────
+  async function loadWeeklyProgress(user) {
+    if (!user?.weeklyTarget) return
+    try {
+      const now = new Date()
+      const day = now.getDay() === 0 ? 6 : now.getDay() - 1
+      const weekStart = new Date(now)
+      weekStart.setDate(now.getDate() - day)
+      weekStart.setHours(0, 0, 0, 0)
+
+      const entries = await getEntries()
+      const weekSec = entries
+        .filter(e => new Date(e.start) >= weekStart)
+        .reduce((s, e) => s + e.duration, 0)
+
+      setWeeklyProgress({
+        hours:  Math.round(weekSec / 360) / 10,   // 1 decimal
+        target: user.weeklyTarget,
+      })
+    } catch { /* silent */ }
+  }
+
+  // ── Timer persistence ─────────────────────────────────────────
+  function saveTimer(ctx) {
+    localStorage.setItem(TIMER_SAVE_KEY, JSON.stringify(ctx))
+  }
+
+  function clearSavedTimer() {
+    localStorage.removeItem(TIMER_SAVE_KEY)
+  }
+
+  function restoreTimer() {
+    const saved = localStorage.getItem(TIMER_SAVE_KEY)
+    if (!saved) return
+    try {
+      const ctx = JSON.parse(saved)
+      setTimerCtx(ctx)
+      setActiveEntry({
+        companyId: ctx.companyId, companyName: ctx.companyName, companyColor: ctx.companyColor,
+        projectId: ctx.projectId, projectName: ctx.projectName, projectEmoji: ctx.projectEmoji,
+        elapsed: 0,
+      })
+      restoreFrom(ctx.startISO)
+    } catch { clearSavedTimer() }
+  }
 
   const refresh     = useCallback(() => setDataVersion(v => v + 1), [])
   const toggleTheme = useCallback(() => setTheme(t => t === 'dark' ? 'light' : 'dark'), [])
 
-  // ── Timer ─────────────────────────────────────────────────────
+  // ── Timer start ───────────────────────────────────────────────
   function handleTimerStart({ companyId, projectId, companyName, companyColor, projectName, projectEmoji, note }) {
     const startISO = start()
-    setTimerCtx({ companyId, projectId, note: note ?? '', startISO })
+    const ctx = { companyId, projectId, note: note ?? '', startISO, companyName, companyColor, projectName, projectEmoji }
+    setTimerCtx(ctx)
     setActiveEntry({ companyId, companyName, companyColor, projectId, projectName, projectEmoji, elapsed: 0 })
+    saveTimer(ctx)
 
     if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission()
     clearTimeout(notifRef.current)
@@ -94,11 +140,24 @@ export default function App() {
     }, TWO_HOURS_MS)
   }
 
+  // ── Pause / Resume ────────────────────────────────────────────
+  function handleTimerPause() {
+    pause(elapsed)
+    setActiveEntry(prev => prev ? { ...prev, paused: true } : null)
+  }
+
+  function handleTimerResume() {
+    resume(elapsed)
+    setActiveEntry(prev => prev ? { ...prev, paused: false } : null)
+  }
+
+  // ── Timer stop ────────────────────────────────────────────────
   async function handleTimerStop() {
     clearTimeout(notifRef.current)
     if (!timerCtx) return
     const { end, duration } = stop()
     const user = getCachedUser()
+    clearSavedTimer()
     try {
       await addEntry({
         id: uid(), userId: user?.id ?? 'unknown',
@@ -114,8 +173,9 @@ export default function App() {
   async function handleLogout() {
     clearTimeout(notifRef.current)
     if (running) { stop(); reset() }
+    clearSavedTimer()
     await logout()
-    setCurrentUser(null); setActiveEntry(null); setTimerCtx(null)
+    setCurrentUser(null); setActiveEntry(null); setTimerCtx(null); setWeeklyProgress(null)
   }
 
   useKeyboardShortcuts({
@@ -139,7 +199,7 @@ export default function App() {
   }
 
   const liveEntry = running && activeEntry && timerCtx
-    ? { start: timerCtx.startISO, elapsed: activeEntry.elapsed, color: activeEntry.companyColor, companyId: timerCtx.companyId, projectId: timerCtx.projectId, companyName: activeEntry.companyName, projectEmoji: activeEntry.projectEmoji ?? '', projectName: activeEntry.projectName ?? '' }
+    ? { start: timerCtx.startISO, elapsed, color: activeEntry.companyColor, companyId: timerCtx.companyId, projectId: timerCtx.projectId, companyName: activeEntry.companyName, projectEmoji: activeEntry.projectEmoji ?? '', projectName: activeEntry.projectName ?? '' }
     : null
 
   return (
@@ -158,18 +218,39 @@ export default function App() {
         </div>
       )}
 
-      <Sidebar page={page} onNavigate={setPage} activeEntry={activeEntry} currentUser={currentUser}
-        onLogout={handleLogout} onStopTimer={handleTimerStop} theme={theme} onThemeToggle={toggleTheme} />
+      <Sidebar
+        page={page}
+        onNavigate={setPage}
+        activeEntry={activeEntry}
+        timerPaused={paused}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        onStopTimer={handleTimerStop}
+        onPauseTimer={handleTimerPause}
+        onResumeTimer={handleTimerResume}
+        weeklyProgress={weeklyProgress}
+        theme={theme}
+        onThemeToggle={toggleTheme}
+      />
 
       <main className="main-content">
         {page === 'timer' && (
-          <TimerView timerRunning={running} timerElapsed={elapsed}
-            onTimerStart={handleTimerStart} onTimerStop={handleTimerStop}
-            onDataChange={refresh} activeEntry={activeEntry} liveEntry={liveEntry} />
+          <TimerView
+            timerRunning={running}
+            timerPaused={paused}
+            timerElapsed={elapsed}
+            onTimerStart={handleTimerStart}
+            onTimerStop={handleTimerStop}
+            onTimerPause={handleTimerPause}
+            onTimerResume={handleTimerResume}
+            onDataChange={refresh}
+            activeEntry={activeEntry}
+            liveEntry={liveEntry}
+          />
         )}
-        {page === 'entries' && <EntriesView dataVersion={dataVersion} onDataChange={refresh} liveEntry={liveEntry} />}
-        {page === 'reports' && <ReportsView dataVersion={dataVersion} currentUser={currentUser} />}
-        {page === 'team'    && currentUser?.role === 'admin' && <TeamView dataVersion={dataVersion} />}
+        {page === 'entries'  && <EntriesView dataVersion={dataVersion} onDataChange={refresh} liveEntry={liveEntry} />}
+        {page === 'reports'  && <ReportsView dataVersion={dataVersion} currentUser={currentUser} />}
+        {page === 'team'     && currentUser?.role === 'admin' && <TeamView dataVersion={dataVersion} />}
         {page === 'settings' && <SettingsView onDataChange={refresh} currentUser={currentUser} />}
         {page === 'archiv'   && currentUser?.role === 'admin' && <ArchivView onDataChange={refresh} />}
       </main>

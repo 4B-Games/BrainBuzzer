@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Play, PlusCircle, Star, X } from 'lucide-react'
+import { Play, PlusCircle, Star, X, Pause } from 'lucide-react'
 import { getActiveCompanies, getEntries, updateEntry, deleteEntry } from '../services/dataService.supabase.js'
 import { getCachedUser } from '../services/authService.supabase.js'
 import { getTemplates, saveTemplate, deleteTemplate } from '../services/templateService.js'
@@ -10,8 +10,8 @@ import ManualEntryModal from '../components/ManualEntryModal.jsx'
 import Timeline from '../components/Timeline.jsx'
 
 export default function TimerView({
-  timerRunning, timerElapsed,
-  onTimerStart, onTimerStop,
+  timerRunning, timerPaused, timerElapsed,
+  onTimerStart, onTimerStop, onTimerPause, onTimerResume,
   onDataChange, activeEntry, liveEntry,
 }) {
   const [companies,         setCompanies]         = useState([])
@@ -168,9 +168,20 @@ export default function TimerView({
                   ? ` · ${activeEntry.projectEmoji ? activeEntry.projectEmoji + ' ' : ''}${activeEntry.projectName}`
                   : ''}
               </p>
-              <button className="btn-stop-large" onClick={onTimerStop}>
-                ■ &nbsp;Timer stoppen
-              </button>
+              <div className="timer-action-row">
+                <button
+                  className={`btn-pause-large${timerPaused ? ' btn-pause-large--resume' : ''}`}
+                  onClick={timerPaused ? onTimerResume : onTimerPause}
+                >
+                  {timerPaused
+                    ? <><Play size={16} fill="currentColor" /> Fortsetzen</>
+                    : <><Pause size={16} fill="currentColor" /> Pause</>
+                  }
+                </button>
+                <button className="btn-stop-large" onClick={onTimerStop}>
+                  ■ &nbsp;Stoppen
+                </button>
+              </div>
             </div>
           </>
         )}

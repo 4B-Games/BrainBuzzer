@@ -2958,3 +2958,108 @@ html, body {
   filter: brightness(0.88);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--danger) 40%, transparent);
 }
+
+/* ── Pause button in SAT banner ──────────────────────────────── */
+.sat-pause-btn {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--sidebar-border);
+  color: var(--sidebar-text-dim);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.sat-pause-btn:hover { background: rgba(255,255,255,0.05); color: var(--sidebar-text); }
+
+.sat-pause-btn--resume {
+  color: var(--success);
+}
+
+.sat-pause-btn--resume:hover { background: rgba(74,222,158,0.08); }
+
+.sat-paused-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--accent);
+  margin-left: 4px;
+  animation: pulse 1.5s infinite;
+}
+
+/* ── Pause button in TimerView ───────────────────────────────── */
+.timer-action-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-pause-large {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 28px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.btn-pause-large:hover { background: var(--border); }
+
+.btn-pause-large--resume {
+  background: color-mix(in srgb, var(--success) 12%, var(--surface2));
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.btn-pause-large--resume:hover { background: color-mix(in srgb, var(--success) 20%, var(--surface2)); }
+
+/* ── Weekly progress bar ─────────────────────────────────────── */
+.swp-wrap {
+  padding: 8px 10px;
+  background: var(--sidebar-surface);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.swp-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sidebar-text);
+  letter-spacing: 0.2px;
+}
+
+.swp-bar {
+  height: 5px;
+  background: var(--sidebar-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.swp-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+  min-width: 2px;
+}

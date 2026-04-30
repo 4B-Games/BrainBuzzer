@@ -1,8 +1,12 @@
-import { Timer, List, BarChart2, Settings, Clock, LogOut, Sun, Moon, Users, Square, Archive } from 'lucide-react'
+import { Timer, List, BarChart2, Settings, Clock, LogOut, Sun, Moon, Users, Square, Archive, Pause, Play } from 'lucide-react'
 import { fmtDuration } from '../utils/format.js'
 import SidebarParticles from './SidebarParticles.jsx'
 
-export default function Sidebar({ page, onNavigate, activeEntry, currentUser, onLogout, onStopTimer, theme, onThemeToggle }) {
+export default function Sidebar({
+  page, onNavigate, activeEntry, timerPaused,
+  currentUser, onLogout, onStopTimer, onPauseTimer, onResumeTimer,
+  weeklyProgress, theme, onThemeToggle,
+}) {
   const isAdmin = currentUser?.role === 'admin'
 
   const NAV = [
@@ -14,9 +18,14 @@ export default function Sidebar({ page, onNavigate, activeEntry, currentUser, on
     ...(isAdmin ? [{ id: 'archiv', label: 'Archiv', Icon: Archive }] : []),
   ]
 
+  // Weekly progress percentage clamped to 100
+  const pct = weeklyProgress?.target > 0
+    ? Math.min(100, (weeklyProgress.hours / weeklyProgress.target) * 100)
+    : 0
+  const overTarget = weeklyProgress?.hours >= weeklyProgress?.target
+
   return (
     <aside className="sidebar" style={{ position: 'relative' }}>
-      {/* Floating particle animation */}
       <SidebarParticles />
 
       <div className="sidebar-logo" style={{ position: 'relative', zIndex: 1 }}>
@@ -40,6 +49,7 @@ export default function Sidebar({ page, onNavigate, activeEntry, currentUser, on
         ))}
       </nav>
 
+      {/* Active timer banner */}
       {activeEntry && (
         <div className="sat-banner" style={{ borderColor: activeEntry.companyColor, position: 'relative', zIndex: 1 }}>
           <div className="sat-body" onClick={() => onNavigate('timer')} role="button" tabIndex={0}
@@ -53,10 +63,26 @@ export default function Sidebar({ page, onNavigate, activeEntry, currentUser, on
                   {activeEntry.projectName}
                 </span>
               )}
-              <span className="sat-elapsed">{fmtDuration(activeEntry.elapsed)}</span>
+              <span className="sat-elapsed">
+                {fmtDuration(activeEntry.elapsed)}
+                {timerPaused && <span className="sat-paused-badge"> PAUSIERT</span>}
+              </span>
             </div>
             <span className="sat-nav-hint">→ Timer</span>
           </div>
+
+          {/* Pause / Resume */}
+          <button
+            className={`sat-pause-btn${timerPaused ? ' sat-pause-btn--resume' : ''}`}
+            onClick={timerPaused ? onResumeTimer : onPauseTimer}
+          >
+            {timerPaused
+              ? <><Play size={13} fill="currentColor" /> Fortsetzen</>
+              : <><Pause size={13} fill="currentColor" /> Pause</>
+            }
+          </button>
+
+          {/* Stop */}
           <button className="sat-stop-btn" onClick={onStopTimer}>
             <Square size={13} fill="currentColor" />
             Timer stoppen
@@ -65,6 +91,27 @@ export default function Sidebar({ page, onNavigate, activeEntry, currentUser, on
       )}
 
       <div className="sidebar-bottom" style={{ position: 'relative', zIndex: 1 }}>
+        {/* Weekly progress – shown when user has a target */}
+        {weeklyProgress?.target > 0 && (
+          <div className="swp-wrap">
+            <div className="swp-header">
+              <span>Diese Woche</span>
+              <span style={{ color: overTarget ? 'var(--success)' : 'inherit' }}>
+                {weeklyProgress.hours}h / {weeklyProgress.target}h
+              </span>
+            </div>
+            <div className="swp-bar">
+              <div
+                className="swp-fill"
+                style={{
+                  width: `${pct}%`,
+                  background: overTarget ? 'var(--success)' : 'var(--accent)',
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         <button className="sidebar-theme-btn" onClick={onThemeToggle} title="Design wechseln">
           {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
           <span>{theme === 'dark' ? 'Helles Design' : 'Dunkles Design'}</span>
