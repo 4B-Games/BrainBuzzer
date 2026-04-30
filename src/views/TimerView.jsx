@@ -32,7 +32,7 @@ export default function TimerView({
       all.filter(e => isToday(e.start)).sort((a, b) => new Date(a.start) - new Date(b.start))
     ))
     const u = getCachedUser()
-    if (u) getTemplates(u.id).then(t => setTemplates(t ?? []))
+    if (u) setTemplates(getTemplates(u.id) ?? [])
   }
 
   useEffect(() => { loadData() }, [tlVersion])
@@ -91,8 +91,8 @@ export default function TimerView({
 
   async function handleSaveTemplate() {
     if (!selectedCompanyId || !user) return
-    await saveTemplate({ userId: user.id, companyId: selectedCompanyId, projectId: selectedProjectId ?? null })
-    getTemplates(getCachedUser()?.id).then(t => setTemplates(t || []))
+    saveTemplate({ userId: user.id, companyId: selectedCompanyId, projectId: selectedProjectId ?? null })
+    setTemplates(getTemplates(user.id) ?? [])
   }
 
   function handleDeleteTemplate(id) {
