@@ -27,12 +27,12 @@ export default function TimerView({
   const user = getCachedUser()
 
   function loadData() {
-    const cos = getActiveCompanies()
-    setCompanies(cos)
-    setTodayEntries(
-      getEntries().filter(e => isToday(e.start)).sort((a, b) => new Date(a.start) - new Date(b.start))
-    )
-    if (user) setTemplates(getTemplates(user.id))
+    getActiveCompanies().then(cos => setCompanies(cos))
+    getEntries().then(all => setTodayEntries(
+      all.filter(e => isToday(e.start)).sort((a, b) => new Date(a.start) - new Date(b.start))
+    ))
+    const u = getCachedUser()
+    if (u) getTemplates(u.id).then(t => setTemplates(t ?? []))
   }
 
   useEffect(() => { loadData() }, [tlVersion])
