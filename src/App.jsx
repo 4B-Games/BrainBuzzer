@@ -32,13 +32,24 @@ export default function App() {
 
   // ── Auth: Supabase session handling ──────────────────────────
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const user = await getCurrentUser()
-        setCurrentUser(user)
-      }
+    if (!supabase) {
+      console.error('Supabase client nicht initialisiert – .env-Variablen prüfen')
       setAuthLoading(false)
-    })
+      return
+    }
+
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        if (session?.user) {
+          const user = await getCurrentUser()
+          setCurrentUser(user)
+        }
+        setAuthLoading(false)
+      })
+      .catch(err => {
+        console.error('Supabase getSession Fehler:', err)
+        setAuthLoading(false)
+      })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
