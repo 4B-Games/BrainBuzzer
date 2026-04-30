@@ -20,7 +20,7 @@
   --surface2:     #f0efec;
   --border:       #e6e4de;
   --text:         #18161f;
-  --text-dim:     #7a7570;
+  --text-dim:     #504a44;
   --accent:       #7c4dff;
   --accent-hover: #6b3fee;
   --accent-muted: rgba(124, 77, 255, 0.10);
@@ -48,7 +48,7 @@
   --surface2:     #2a2a2a;
   --border:       #383838;
   --text:         #f5f5f8;   /* weißer */
-  --text-dim:     #aaaaaa;   /* deutlich heller */
+  --text-dim:     #c8c8c8;
   --accent:       #9d71ff;
   --accent-hover: #7c4dff;
   --accent-muted: rgba(157, 113, 255, 0.14);
@@ -1051,23 +1051,26 @@ html, body {
 
 .tl-tick--medium .tl-tick-label {
   font-size: 10px;
-  font-weight: 500;
-  opacity: 0.6;
+  font-weight: 600;
+  opacity: 0.8;
 }
 
+/* Quarter (15/45 min): clearly visible, half the block height */
 .tl-tick--quarter .tl-tick-line {
-  height: 9px;
-  background: color-mix(in srgb, var(--border) 60%, transparent);
+  height: 50%;
+  background: color-mix(in srgb, var(--text-dim) 55%, transparent);
 }
 
+/* Small (10/20/40/50 min) */
 .tl-tick--small .tl-tick-line {
-  height: 6px;
-  background: color-mix(in srgb, var(--border) 38%, transparent);
+  height: 14px;
+  background: color-mix(in srgb, var(--text-dim) 35%, transparent);
 }
 
+/* Tiny (5/25/35/55 min) */
 .tl-tick--tiny .tl-tick-line {
-  height: 3px;
-  background: color-mix(in srgb, var(--border) 22%, transparent);
+  height: 7px;
+  background: color-mix(in srgb, var(--text-dim) 20%, transparent);
 }
 
 .tl-tick-label {
@@ -1076,8 +1079,8 @@ html, body {
   left: 50%;
   transform: translateX(-50%);
   font-size: 11px;
-  font-weight: 600;
-  color: var(--text-dim);
+  font-weight: 700;
+  color: var(--text);
   white-space: nowrap;
   line-height: 16px;
   font-family: 'JetBrains Mono', monospace;
