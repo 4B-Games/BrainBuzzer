@@ -43,9 +43,9 @@ export default function TeamManagement({ dataVersion }) {
 
   function askDelete(u) {
     setConfirmDialog({
-      title: 'Konto löschen',
-      message: `Das Konto von „${u.name}" wird dauerhaft gelöscht. Ihre Zeiteinträge bleiben erhalten, sind aber keinem Konto mehr zugeordnet.`,
-      confirmLabel: 'Konto löschen',
+      title: 'Konto deaktivieren',
+      message: `Das Konto von „${u.name}" wird deaktiviert – die Person kann sich nicht mehr anmelden. Zeiteinträge bleiben erhalten. Für eine vollständige Löschung: Supabase Dashboard → Authentication → Users → Nutzer auswählen → Delete.`,
+      confirmLabel: 'Deaktivieren',
       variant: 'danger',
       onConfirm: () => { deleteUser(u.id); refresh(); setConfirmDialog(null) },
     })

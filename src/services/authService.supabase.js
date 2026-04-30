@@ -80,8 +80,17 @@ export async function updateUser(id, changes) {
 }
 
 export async function deleteUser(id) {
-  // Full deletion requires service role. Deactivate instead.
+  // Full deletion of auth users requires the Supabase Admin API (service role key).
+  // We deactivate the profile instead – the user can no longer log in.
+  // To permanently remove from Supabase Auth, go to:
+  // Dashboard → Authentication → Users → select user → Delete
   await updateUser(id, { active: false })
+}
+
+/** Change the currently logged-in user's own password */
+export async function changePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) throw error
 }
 
 // ── Helpers ───────────────────────────────────────────────────────

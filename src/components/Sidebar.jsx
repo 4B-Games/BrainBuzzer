@@ -1,6 +1,8 @@
-import { Timer, List, BarChart2, Settings, Clock, LogOut, Sun, Moon, Users, Square, Archive, Pause, Play } from 'lucide-react'
+import { Timer, List, BarChart2, Settings, Clock, LogOut, Sun, Moon, Users, Square, Archive, Pause, Play, KeyRound } from 'lucide-react'
+import { useState } from 'react'
 import { fmtDuration } from '../utils/format.js'
 import SidebarParticles from './SidebarParticles.jsx'
+import ChangePasswordModal from './ChangePasswordModal.jsx'
 
 export default function Sidebar({
   page, onNavigate, activeEntry, timerPaused,
@@ -8,6 +10,7 @@ export default function Sidebar({
   weeklyProgress, theme, onThemeToggle,
 }) {
   const isAdmin = currentUser?.role === 'admin'
+  const [showChangePw, setShowChangePw] = useState(false)
 
   const NAV = [
     { id: 'timer',    label: 'Timer',           Icon: Timer },
@@ -125,12 +128,16 @@ export default function Sidebar({
                 {currentUser.role === 'admin' ? 'Administrator' : 'Mitarbeiter'}
               </span>
             </div>
+            <button className="sidebar-logout-btn" onClick={() => setShowChangePw(true)} title="Passwort ändern">
+              <KeyRound size={15} />
+            </button>
             <button className="sidebar-logout-btn" onClick={onLogout} title="Abmelden">
               <LogOut size={15} />
             </button>
           </div>
         )}
       </div>
+      {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
     </aside>
   )
 }
