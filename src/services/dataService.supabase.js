@@ -55,13 +55,14 @@ export async function getActiveCompanies() {
   }))
 }
 
-export async function addCompany({ id, name, color }) {
-  const { error } = await supabase.from('companies').insert({ id, name, color, archived: false })
+export async function addCompany({ name, color }) {
+  // Let Supabase generate the UUID – our uid() format is not valid for UUID columns
+  const { error } = await supabase.from('companies').insert({ name, color, archived: false })
   if (error) throw error
 }
 
-export async function addProject(companyId, { id, name, emoji }) {
-  const { error } = await supabase.from('projects').insert({ id, company_id: companyId, name, emoji: emoji || null, archived: false })
+export async function addProject(companyId, { name, emoji }) {
+  const { error } = await supabase.from('projects').insert({ company_id: companyId, name, emoji: emoji || null, archived: false })
   if (error) throw error
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PlusCircle, ChevronDown, ChevronRight, Archive } from 'lucide-react'
 import { getActiveCompanies, addCompany as _addCo, addProject as _addPr, updateCompanyColor as _updColor, archiveCompany, archiveProject } from '../services/dataService.supabase.js'
-import { uid } from '../utils/format.js'
+import { uid } from '../utils/format.js'  // still used elsewhere
 import EmojiPicker from '../components/EmojiPicker.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 
@@ -22,7 +22,7 @@ export default function SettingsView({ onDataChange, currentUser }) {
   async function addCompany() {
     const name = newCompanyName.trim()
     if (!name) return
-    await _addCo({ id: uid(), name, color: newCompanyColor })
+    await _addCo({ name, color: newCompanyColor })
     setNewCompanyName(''); setNewCompanyColor('#6366f1')
     load(); onDataChange()
   }
@@ -44,7 +44,7 @@ export default function SettingsView({ onDataChange, currentUser }) {
     const name = (newProjectNames[companyId] ?? '').trim()
     if (!name) return
     const emoji = newProjectEmojis[companyId] ?? ''
-    await _addPr(companyId, { id: uid(), name, emoji })
+    await _addPr(companyId, { name, emoji })
     setNewProjectNames(prev => ({ ...prev, [companyId]: '' }))
     setNewProjectEmojis(prev => ({ ...prev, [companyId]: '' }))
     load(); onDataChange()
