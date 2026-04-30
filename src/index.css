@@ -472,6 +472,8 @@ html, body {
   justify-content: center;
   padding: 24px;
   position: relative;
+  overflow: hidden;
+  position: relative;
 }
 
 .login-theme-btn {

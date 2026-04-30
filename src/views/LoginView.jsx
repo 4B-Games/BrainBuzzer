@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Clock, Sun, Moon, LogIn } from 'lucide-react'
 import { login } from '../services/authService.supabase.js'
+import SidebarParticles from '../components/SidebarParticles.jsx'
 
 export default function LoginView({ onLogin, theme, onThemeToggle }) {
   const [email,    setEmail]    = useState('')
@@ -13,7 +14,7 @@ export default function LoginView({ onLogin, theme, onThemeToggle }) {
     setError(''); setLoading(true)
     try {
       const user = await login(email, password)
-      if (!user)            { setError('E-Mail oder Passwort falsch.'); return }
+      if (!user)               { setError('E-Mail oder Passwort falsch.'); return }
       if (user === 'disabled') { setError('Dieses Konto wurde deaktiviert. Bitte Admin kontaktieren.'); return }
       onLogin(user)
     } catch (err) {
@@ -25,11 +26,15 @@ export default function LoginView({ onLogin, theme, onThemeToggle }) {
 
   return (
     <div className="login-page">
-      <button className="login-theme-btn" onClick={onThemeToggle} title="Design wechseln">
+      {/* Particles fill the entire dark background */}
+      <SidebarParticles />
+
+      <button className="login-theme-btn" onClick={onThemeToggle} title="Design wechseln"
+        style={{ zIndex: 2 }}>
         {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
       </button>
 
-      <div className="login-card">
+      <div className="login-card" style={{ position: 'relative', zIndex: 2 }}>
         <div className="login-logo">
           <Clock size={30} />
           <span>Brain<strong>Buzzer</strong></span>

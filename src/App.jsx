@@ -18,7 +18,7 @@ import ArchivView from './views/ArchivView.jsx'
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000
 
 export default function App() {
-  const [theme,          setTheme]          = useState(() => localStorage.getItem('bb_theme') || 'light')
+  const [theme,          setTheme]          = useState(() => localStorage.getItem('bb_theme') || 'dark')
   const [currentUser,    setCurrentUser]    = useState(null)
   const [authLoading,    setAuthLoading]    = useState(true)
   const [page,           setPage]           = useState('timer')
